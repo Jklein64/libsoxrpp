@@ -69,7 +69,8 @@ FetchContent_Declare(soxr GIT_REPOSITORY https://github.com/dofuuz/soxr.git GIT_
 FetchContent_MakeAvailable(soxr)
 target_link_libraries(soxrpp PRIVATE soxr)
 # Ugly hack because soxr CMake gets confused by modern CMake
-target_include_directories(soxrpp PRIVATE ${soxr_SOURCE_DIR}/src)
+# TODO make this private once the wrapper is properly abstracted
+target_include_directories(soxrpp PUBLIC ${soxr_SOURCE_DIR}/src)
 
 if(SOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
     configure_package_config_file(cmake/soxrpp-config.cmake.in soxrpp-config.cmake
