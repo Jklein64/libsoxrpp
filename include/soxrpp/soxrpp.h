@@ -4,6 +4,7 @@
 #include "soxrpp/export.h"
 
 #include <cstddef>
+#include <string>
 
 namespace soxrpp {
 
@@ -20,32 +21,32 @@ class SoxrError : std::exception {
     }
 };
 
-// enum class SoxrDataType {
-//     /* Internal; do not use: */
-//     Float32,
-//     Float64,
-//     Int32,
-//     Int16,
-//     Split = 4,
+enum class SoxrDataType {
+    /* Internal; do not use: */
+    Float32,
+    Float64,
+    Int32,
+    Int16,
+    Split = 4,
 
-//     /* Use for interleaved channels: */
-//     Float32_I = Float32,
-//     Float64_I,
-//     Int32_I,
-//     Int16_I,
+    /* Use for interleaved channels: */
+    Float32_I = Float32,
+    Float64_I,
+    Int32_I,
+    Int16_I,
 
-//     /* Use for split channels: */
-//     Float32_S = Split,
-//     Float64_S,
-//     Int32_S,
-//     Int16_S
-// };
+    /* Use for split channels: */
+    Float32_S = Split,
+    Float64_S,
+    Int32_S,
+    Int16_S
+};
 
-// struct SoxrIoSpec {
-//     SoxrDataType itype, otype;
-//     double scale;
-//     unsigned long flags; // TODO how to expose flags?
-// };
+struct SoxrIoSpec {
+    SoxrDataType itype, otype;
+    double scale;
+    unsigned long flags; // TODO how best to expose flags?
+};
 
 // using SoxrQualitySpec = soxr_quality_spec_t;
 // using SoxrRuntimeSpec = soxr_runtime_spec_t;
@@ -55,7 +56,7 @@ SOXRPP_EXPORT class SoxResampler {
     soxr_t m_soxr{nullptr};
 
   public:
-    SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const soxr_io_spec_t* io_spec,
+    SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const SoxrIoSpec& io_spec,
                  const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec);
     ~SoxResampler();
 
@@ -71,7 +72,7 @@ SOXRPP_EXPORT class SoxResampler {
 };
 
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
-                           soxr_out_t out, size_t olen, size_t* odone, const soxr_io_spec_t*, const soxr_quality_spec_t*,
+                           soxr_out_t out, size_t olen, size_t* odone, const SoxrIoSpec&, const soxr_quality_spec_t*,
                            const soxr_runtime_spec_t*);
 
 } // namespace soxrpp
