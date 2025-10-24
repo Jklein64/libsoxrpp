@@ -51,24 +51,24 @@ void SoxResampler::set_input_fn(soxr_input_fn_t input_fn, void* input_fn_state, 
     throw_if_soxr_error(soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen));
 }
 
-size_t SoxResampler::output(soxr_out_t data, size_t olen) {
+size_t SoxResampler::output(soxr_out_t data, size_t olen) noexcept {
     return soxr_output(m_soxr, data, olen);
 }
 
-std::string SoxResampler::error() {
+std::string SoxResampler::error() noexcept {
     soxr_error_t err = soxr_error(m_soxr);
     return err; // converts const char* -> std::string
 }
 
-size_t* SoxResampler::num_clips() {
+size_t* SoxResampler::num_clips() noexcept {
     return soxr_num_clips(m_soxr);
 }
 
-double SoxResampler::delay() {
+double SoxResampler::delay() noexcept {
     return soxr_delay(m_soxr);
 }
 
-char const* SoxResampler::engine() {
+char const* SoxResampler::engine() noexcept {
     return soxr_engine(m_soxr);
 }
 
@@ -79,12 +79,14 @@ void SoxResampler::clear() {
 void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out,
              size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec, const soxr_quality_spec_t* quality_spec,
              const soxr_runtime_spec_t* runtime_spec) {
-    soxr_io_spec_t io_spec_raw;
     if (io_spec.has_value()) {
-        io_spec_raw = convert_io_spec(*io_spec);
+        soxr_io_spec_t io_spec_raw = convert_io_spec(*io_spec);
+        throw_if_soxr_error(soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
+                                         quality_spec, runtime_spec));
+    } else {
+        throw_if_soxr_error(soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, nullptr,
+                                         quality_spec, runtime_spec));
     }
-    throw_if_soxr_error(soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
-                                     quality_spec, runtime_spec));
 }
 
 } // namespace soxrpp

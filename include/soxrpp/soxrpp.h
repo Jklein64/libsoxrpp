@@ -52,7 +52,7 @@ struct SoxrIoSpec {
 // using SoxrQualitySpec = soxr_quality_spec_t;
 // using SoxrRuntimeSpec = soxr_runtime_spec_t;
 
-SOXRPP_EXPORT class SoxResampler {
+class SoxResampler {
   private:
     soxr_t m_soxr{nullptr};
     std::optional<SoxrIoSpec> m_io_spec;
@@ -66,12 +66,12 @@ SOXRPP_EXPORT class SoxResampler {
 
     void process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone);
     void set_input_fn(soxr_input_fn_t, void* input_fn_state, size_t max_ilen);
-    size_t output(soxr_out_t data, size_t olen);
+    size_t output(soxr_out_t data, size_t olen) noexcept;
 
-    std::string error();
-    size_t* num_clips();
-    double delay();
-    char const* engine();
+    std::string error() noexcept;
+    size_t* num_clips() noexcept;
+    double delay() noexcept;
+    char const* engine() noexcept;
     void clear();
 };
 
