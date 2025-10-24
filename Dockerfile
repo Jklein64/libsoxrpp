@@ -30,3 +30,6 @@ RUN /bin/bash <<EOF
     apt-get update
     apt-get install -y --no-install-recommends cmake
 EOF
+
+WORKDIR /libsoxrpp
+COPY . .
