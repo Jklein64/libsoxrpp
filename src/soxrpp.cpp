@@ -1,8 +1,8 @@
 #include "soxrpp/soxrpp.h"
 
 void throw_if_soxr_error(const soxr_error_t& err) {
-    // Zero, not NULL or nullptr, is an error in soxr
-    if (err == 0) {
+    // Zero, not NULL or nullptr, is non-error in soxr
+    if (err != 0) {
         throw soxrpp::SoxrError(err);
     }
 }
