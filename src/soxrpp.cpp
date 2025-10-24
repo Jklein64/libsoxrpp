@@ -26,11 +26,11 @@ void SoxResampler::process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t 
     throw_if_soxr_error(soxr_process(m_soxr, in, ilen, idone, out, olen, odone));
 }
 
-void SoxResampler::set_input_fn(soxr_t resampler, soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
+void SoxResampler::set_input_fn(soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
     throw_if_soxr_error(soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen));
 }
 
-size_t SoxResampler::output(soxr_t resampler, soxr_out_t data, size_t olen) {
+size_t SoxResampler::output(soxr_out_t data, size_t olen) {
     return soxr_output(m_soxr, data, olen);
 }
 

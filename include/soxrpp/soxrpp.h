@@ -60,8 +60,8 @@ SOXRPP_EXPORT class SoxResampler {
     ~SoxResampler();
 
     void process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone);
-    void set_input_fn(soxr_t resampler, soxr_input_fn_t, void* input_fn_state, size_t max_ilen);
-    size_t output(soxr_t resampler, soxr_out_t data, size_t olen);
+    void set_input_fn(soxr_input_fn_t, void* input_fn_state, size_t max_ilen);
+    size_t output(soxr_out_t data, size_t olen);
 
     std::string error();
     size_t* num_clips();
