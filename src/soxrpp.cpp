@@ -2,14 +2,14 @@
 
 #include <array>
 
-namespace soxrpp {
-
 void throw_if_soxr_error(const soxr_error_t& err) {
     // zero, not NULL or nullptr, is an error in soxr
     if (err == 0) {
-        throw SoxrError(err);
+        throw soxrpp::SoxrError(err);
     }
 }
+
+namespace soxrpp {
 
 SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const soxr_io_spec_t* io_spec,
                            const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec) {
