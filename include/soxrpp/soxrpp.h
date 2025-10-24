@@ -4,6 +4,7 @@
 #include "soxrpp/export.h"
 
 #include <cstddef>
+#include <optional>
 #include <string>
 
 namespace soxrpp {
@@ -54,12 +55,12 @@ struct SoxrIoSpec {
 SOXRPP_EXPORT class SoxResampler {
   private:
     soxr_t m_soxr{nullptr};
-    SoxrIoSpec m_io_spec;
+    std::optional<SoxrIoSpec> m_io_spec;
     // Type soxr_io_spec_t* is erased to not require soxr.h
-    void* m_io_spec_internal;
+    void* m_io_spec_internal{0};
 
   public:
-    SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const SoxrIoSpec& io_spec,
+    SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const std::optional<SoxrIoSpec>& io_spec,
                  const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec);
     ~SoxResampler();
 
@@ -75,7 +76,7 @@ SOXRPP_EXPORT class SoxResampler {
 };
 
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
-                           soxr_out_t out, size_t olen, size_t* odone, const SoxrIoSpec&, const soxr_quality_spec_t*,
-                           const soxr_runtime_spec_t*);
+                           soxr_out_t out, size_t olen, size_t* odone, const SoxrIoSpec& io_spec,
+                           const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec);
 
 } // namespace soxrpp

@@ -24,12 +24,15 @@ soxr_io_spec_t convert_io_spec(const soxrpp::SoxrIoSpec& io_spec) {
 
 namespace soxrpp {
 
-SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const SoxrIoSpec& io_spec,
-                           const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec)
+SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
+                           const std::optional<SoxrIoSpec>& io_spec = std::nullopt, const soxr_quality_spec_t* quality_spec = 0,
+                           const soxr_runtime_spec_t* runtime_spec = 0)
     : m_io_spec(io_spec) {
     soxr_error_t err;
     m_io_spec_internal = malloc(sizeof(soxr_io_spec_t));
-    *static_cast<soxr_io_spec_t*>(m_io_spec_internal) = convert_io_spec(io_spec);
+    if (io_spec.has_value()) {
+        *static_cast<soxr_io_spec_t*>(m_io_spec_internal) = convert_io_spec(*io_spec);
+    }
     m_soxr = soxr_create(input_rate, output_rate, num_channels, &err, static_cast<soxr_io_spec_t*>(m_io_spec_internal), quality_spec,
                          runtime_spec);
     throw_if_soxr_error(err);

@@ -9,6 +9,8 @@ project(soxrpp
 add_library(soxrpp)
 add_library(soxrpp::soxrpp ALIAS soxrpp)
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
+# Use at least C++17 for optional
+target_compile_features(soxrpp PUBLIC cxx_std_17)
 
 include(cmake/utils.cmake)
 include(GNUInstallDirs)
@@ -71,6 +73,8 @@ target_link_libraries(soxrpp PRIVATE soxr)
 # Ugly hack because soxr CMake gets confused by modern CMake
 # TODO make this private once the wrapper is properly abstracted
 target_include_directories(soxrpp PUBLIC ${soxr_SOURCE_DIR}/src)
+# Can remove once PUBLIC becomes PRIVATE
+set_target_properties(soxrpp PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
 
 if(SOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
     configure_package_config_file(cmake/soxrpp-config.cmake.in soxrpp-config.cmake
