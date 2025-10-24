@@ -54,6 +54,9 @@ struct SoxrIoSpec {
 SOXRPP_EXPORT class SoxResampler {
   private:
     soxr_t m_soxr{nullptr};
+    SoxrIoSpec m_io_spec;
+    // Type soxr_io_spec_t* is erased to not require soxr.h
+    void* m_io_spec_internal;
 
   public:
     SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const SoxrIoSpec& io_spec,
