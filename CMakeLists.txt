@@ -64,12 +64,11 @@ set_target_properties(libsoxrpp PROPERTIES
 
 include(FetchContent)
 # Use a fork of soxr that has been patched for working with C++ as a library (for a Python wrapper)
-FetchContent_Declare(libsoxr GIT_REPOSITORY https://github.com/dofuuz/soxr.git GIT_TAG a66f3ee)
-FetchContent_MakeAvailable(libsoxr)
-
-file(GLOB libsoxr_sources ${libsoxr_SOURCE_DIR}/src/*.c ${libsoxr_SOURCE_DIR}/src/*.h)
-add_library(libsoxr ${libsoxr_sources})
-target_link_libraries(libsoxrpp PRIVATE libsoxr)
+FetchContent_Declare(soxr GIT_REPOSITORY https://github.com/dofuuz/soxr.git GIT_TAG a66f3ee)
+FetchContent_MakeAvailable(soxr)
+target_link_libraries(libsoxrpp PRIVATE soxr)
+# Ugly hack because soxr CMake gets confused by modern CMake
+target_include_directories(libsoxrpp PRIVATE ${soxr_SOURCE_DIR}/src)
 
 if(LIBSOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
     configure_package_config_file(cmake/libsoxrpp-config.cmake.in libsoxrpp-config.cmake
@@ -78,7 +77,7 @@ if(LIBSOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
     write_basic_package_version_file(libsoxrpp-config-version.cmake
         COMPATIBILITY SameMajorVersion)
 
-    install(TARGETS libsoxrpp libsoxr EXPORT libsoxrpp_export
+    install(TARGETS libsoxrpp soxr EXPORT libsoxrpp_export
         RUNTIME COMPONENT libsoxrpp
         LIBRARY COMPONENT libsoxrpp NAMELINK_COMPONENT libsoxrpp-dev
         ARCHIVE COMPONENT libsoxrpp-dev
@@ -100,6 +99,7 @@ if(LIBSOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
         COMPONENT libsoxrpp-dev
         FILE "${targets_file}"
         DESTINATION "${LIBSOXRPP_INSTALL_CMAKEDIR}"
+        EXPORT_LINK_INTERFACE_LIBRARIES
         NAMESPACE libsoxrpp::)
 
     install(FILES
