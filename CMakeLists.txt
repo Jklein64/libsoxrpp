@@ -72,9 +72,11 @@ FetchContent_MakeAvailable(soxr)
 target_link_libraries(soxrpp PRIVATE soxr)
 # Ugly hack because soxr CMake gets confused by modern CMake
 # TODO make this private once the wrapper is properly abstracted
-target_include_directories(soxrpp PUBLIC ${soxr_SOURCE_DIR}/src)
-# Can remove once PUBLIC becomes PRIVATE
-set_target_properties(soxrpp PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
+target_include_directories(soxrpp PUBLIC
+    # Can remove generators once PUBLIC becomes PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/soxrpp ${soxr_SOURCE_DIR}/src>  
+    $<INSTALL_INTERFACE:include/soxrpp>  # TODO do I need find_package here for soxr?
+)
 
 if(SOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
     configure_package_config_file(cmake/soxrpp-config.cmake.in soxrpp-config.cmake
