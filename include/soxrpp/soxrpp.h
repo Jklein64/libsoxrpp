@@ -7,18 +7,18 @@
 
 namespace soxrpp {
 
-// class SoxrError : std::exception {
-//   private:
-//     std::string message;
+class SoxrError : std::exception {
+  private:
+    std::string message;
 
-//   public:
-//     SoxrError(const std::string& message)
-//         : message(message) {}
+  public:
+    SoxrError(const std::string& message)
+        : message(message) {}
 
-//     const char* what() const noexcept override {
-//         return message.c_str();
-//     }
-// };
+    const char* what() const noexcept override {
+        return message.c_str();
+    }
+};
 
 // enum class SoxrDataType {
 //     /* Internal; do not use: */
@@ -55,23 +55,23 @@ SOXRPP_EXPORT class SoxResampler {
     soxr_t m_soxr{nullptr};
 
   public:
-    SoxResampler(double input_rate, double output_rate, unsigned int num_channels, soxr_error_t* err, const soxr_io_spec_t* io_spec,
+    SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const soxr_io_spec_t* io_spec,
                  const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec);
     ~SoxResampler();
 
-    soxr_error_t process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone);
-    soxr_error_t set_input_fn(soxr_t resampler, soxr_input_fn_t, void* input_fn_state, size_t max_ilen);
+    void process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone);
+    void set_input_fn(soxr_t resampler, soxr_input_fn_t, void* input_fn_state, size_t max_ilen);
     size_t output(soxr_t resampler, soxr_out_t data, size_t olen);
 
-    soxr_error_t error();
+    std::string error();
     size_t* num_clips();
     double delay();
     char const* engine();
-    soxr_error_t clear();
+    void clear();
 };
 
-SOXRPP_EXPORT soxr_error_t oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen,
-                                   size_t* idone, soxr_out_t out, size_t olen, size_t* odone, const soxr_io_spec_t*,
-                                   const soxr_quality_spec_t*, const soxr_runtime_spec_t*);
+SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
+                           soxr_out_t out, size_t olen, size_t* odone, const soxr_io_spec_t*, const soxr_quality_spec_t*,
+                           const soxr_runtime_spec_t*);
 
 } // namespace soxrpp
