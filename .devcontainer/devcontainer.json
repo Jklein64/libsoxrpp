@@ -1,12 +1,15 @@
 {
-  "name": "libsoxrpp",
+  "name": "soxrpp",
   "build": {
     "context": "..",
     "dockerfile": "../Dockerfile"
   },
   "customizations": {
     "vscode": {
-      "extensions": ["ms-vscode.cmake-tools", "ms-vscode.cpptools"]
+      "extensions": [
+        "ms-vscode.cmake-tools",
+        "ms-vscode.cpptools"
+      ]
     }
   }
 }

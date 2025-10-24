@@ -1,25 +1,26 @@
 cmake_minimum_required(VERSION 3.24)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(libsoxrpp 
+project(soxrpp 
     VERSION 0.0.1 
     DESCRIPTION "C++ wrapper for libsoxr."
     LANGUAGES CXX C)
 
-add_library(libsoxrpp)
-add_library(libsoxrpp::libsoxrpp ALIAS libsoxrpp)
+add_library(soxrpp)
+add_library(soxrpp::soxrpp ALIAS soxrpp)
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 
 include(cmake/utils.cmake)
 include(GNUInstallDirs)
 
-# LIBSOXRPP_SHARED_LIBS determines static/shared build when defined
-option(LIBSOXRPP_INSTALL "Generate target for installing libsoxrpp" ${PROJECT_IS_TOP_LEVEL})
-set_if_undefined(LIBSOXRPP_INSTALL_CMAKEDIR 
-    "${CMAKE_INSTALL_LIBDIR}/cmake/libsoxrpp-${PROJECT_VERSION}" CACHE STRING 
-    "Install path for libsoxrpp package-related CMake files")
+# SOXRPP_SHARED_LIBS determines static/shared build when defined
+option(SOXRPP_INSTALL "Generate target for installing soxrpp" ${PROJECT_IS_TOP_LEVEL})
+set_if_undefined(SOXRPP_INSTALL_CMAKEDIR 
+    "${CMAKE_INSTALL_LIBDIR}/cmake/soxrpp-${PROJECT_VERSION}" CACHE STRING 
+    "Install path for soxrpp package-related CMake files")
 
-if(DEFINED LIBSOXRPP_SHARED_LIBS)
-    set(BUILD_SHARED_LIBS ${LIBSOXRPP_SHARED_LIBS})
+if(DEFINED SOXRPP_SHARED_LIBS)
+    set(BUILD_SHARED_LIBS ${SOXRPP_SHARED_LIBS})
 endif()
 
 set_if_undefined(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -32,33 +33,33 @@ if(NOT BUILD_SHARED_LIBS)
     set(export_file_name "export_static.h")
 endif()
 
-generate_export_header(libsoxrpp EXPORT_FILE_NAME
-    include/libsoxrpp/${export_file_name})
+generate_export_header(soxrpp EXPORT_FILE_NAME
+    include/soxrpp/${export_file_name})
 
 set(public_headers
-    include/libsoxrpp/export.h
-    include/libsoxrpp/libsoxrpp.h)
+    include/soxrpp/export.h
+    include/soxrpp/soxrpp.h)
 set(sources
     ${public_headers}
-    src/libsoxrpp.cpp)
+    src/soxrpp.cpp)
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${sources})
 
 list(APPEND public_headers
-    "${CMAKE_CURRENT_BINARY_DIR}/include/libsoxrpp/${export_file_name}")
+    "${CMAKE_CURRENT_BINARY_DIR}/include/soxrpp/${export_file_name}")
 list(APPEND sources
-    "${CMAKE_CURRENT_BINARY_DIR}/include/libsoxrpp/${export_file_name}")
+    "${CMAKE_CURRENT_BINARY_DIR}/include/soxrpp/${export_file_name}")
 
 include(CMakePackageConfigHelpers)
 
-target_sources(libsoxrpp PRIVATE ${sources})
-target_compile_definitions(libsoxrpp PUBLIC "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:LIBSOXRPP_STATIC_DEFINE>")
+target_sources(soxrpp PRIVATE ${sources})
+target_compile_definitions(soxrpp PUBLIC "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:SOXRPP_STATIC_DEFINE>")
 
-target_include_directories(libsoxrpp
+target_include_directories(soxrpp
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
 
-set_target_properties(libsoxrpp PROPERTIES
+set_target_properties(soxrpp PROPERTIES
     SOVERSION ${PROJECT_VERSION_MAJOR}
     VERSION ${PROJECT_VERSION})
 
@@ -66,45 +67,45 @@ include(FetchContent)
 # Use a fork of soxr that has been patched for working with C++ as a library (for a Python wrapper)
 FetchContent_Declare(soxr GIT_REPOSITORY https://github.com/dofuuz/soxr.git GIT_TAG a66f3ee)
 FetchContent_MakeAvailable(soxr)
-target_link_libraries(libsoxrpp PRIVATE soxr)
+target_link_libraries(soxrpp PRIVATE soxr)
 # Ugly hack because soxr CMake gets confused by modern CMake
-target_include_directories(libsoxrpp PRIVATE ${soxr_SOURCE_DIR}/src)
+target_include_directories(soxrpp PRIVATE ${soxr_SOURCE_DIR}/src)
 
-if(LIBSOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
-    configure_package_config_file(cmake/libsoxrpp-config.cmake.in libsoxrpp-config.cmake
-        INSTALL_DESTINATION "${LIBSOXRPP_INSTALL_CMAKEDIR}")
+if(SOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
+    configure_package_config_file(cmake/soxrpp-config.cmake.in soxrpp-config.cmake
+        INSTALL_DESTINATION "${SOXRPP_INSTALL_CMAKEDIR}")
 
-    write_basic_package_version_file(libsoxrpp-config-version.cmake
+    write_basic_package_version_file(soxrpp-config-version.cmake
         COMPATIBILITY SameMajorVersion)
 
-    install(TARGETS libsoxrpp soxr EXPORT libsoxrpp_export
-        RUNTIME COMPONENT libsoxrpp
-        LIBRARY COMPONENT libsoxrpp NAMELINK_COMPONENT libsoxrpp-dev
-        ARCHIVE COMPONENT libsoxrpp-dev
+    install(TARGETS soxrpp soxr EXPORT soxrpp_export
+        RUNTIME COMPONENT soxrpp
+        LIBRARY COMPONENT soxrpp NAMELINK_COMPONENT soxrpp-dev
+        ARCHIVE COMPONENT soxrpp-dev
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
     install(DIRECTORY include/
         TYPE INCLUDE
-        COMPONENT libsoxrpp-dev)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libsoxrpp/${export_file_name}"
-        COMPONENT libsoxrpp-dev
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libsoxrpp")
+        COMPONENT soxrpp-dev)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/soxrpp/${export_file_name}"
+        COMPONENT soxrpp-dev
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/soxrpp")
 
-    set(targets_file "libsoxrpp-shared-targets.cmake")
+    set(targets_file "soxrpp-shared-targets.cmake")
 
     if(NOT BUILD_SHARED_LIBS)
-        set(targets_file "libsoxrpp-static-targets.cmake")
+        set(targets_file "soxrpp-static-targets.cmake")
     endif()
 
-    install(EXPORT libsoxrpp_export
-        COMPONENT libsoxrpp-dev
+    install(EXPORT soxrpp_export
+        COMPONENT soxrpp-dev
         FILE "${targets_file}"
-        DESTINATION "${LIBSOXRPP_INSTALL_CMAKEDIR}"
+        DESTINATION "${SOXRPP_INSTALL_CMAKEDIR}"
         EXPORT_LINK_INTERFACE_LIBRARIES
-        NAMESPACE libsoxrpp::)
+        NAMESPACE soxrpp::)
 
     install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/libsoxrpp-config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/libsoxrpp-config-version.cmake"
-        COMPONENT libsoxrpp-dev
-        DESTINATION "${LIBSOXRPP_INSTALL_CMAKEDIR}")
+        "${CMAKE_CURRENT_BINARY_DIR}/soxrpp-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/soxrpp-config-version.cmake"
+        COMPONENT soxrpp-dev
+        DESTINATION "${SOXRPP_INSTALL_CMAKEDIR}")
 endif()

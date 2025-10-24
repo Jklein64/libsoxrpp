@@ -1,9 +1,9 @@
-#include "libsoxrpp/libsoxrpp.h"
+#include "soxrpp/soxrpp.h"
 #include "soxr.h"
 
 #include <array>
 
-namespace libsoxrpp {
+namespace soxrpp {
 
 const std::array<float, 48> in = {/* Input: 12 cycles of a sine wave with freq. = irate/4 */
                                   0, 1, 0, -1, 0, 1, 0, -1, 0, 1, 0, -1, 0, 1, 0, -1, 0, 1, 0, -1, 0, 1, 0, -1,
@@ -33,4 +33,4 @@ bool example() {
     free(out); /* Tidy up. */
     return !!error;
 }
-} // namespace libsoxrpp
+} // namespace soxrpp

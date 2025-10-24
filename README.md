@@ -1,3 +1,3 @@
-# Libsoxrpp
+# soxrpp
 
-RAII C++ wrapper for [libsoxr](https://github.com/chirlu/soxr?tab=readme-ov-file), a popular 1D signal resampling library written in C.
+RAII C++ wrapper for [soxr](https://github.com/chirlu/soxr?tab=readme-ov-file), a popular 1D signal resampling library written in C.
