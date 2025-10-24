@@ -49,19 +49,28 @@ struct SOXRPP_EXPORT SoxrIoSpec {
     unsigned long flags; // TODO how best to expose flags?
 };
 
-// using SoxrQualitySpec = soxr_quality_spec_t;
+struct SOXRPP_EXPORT SoxrQualitySpec {
+    double precision;
+    double phase_response;
+    double passband_end;
+    double stopband_begin;
+    unsigned long flags;
+};
+
 // using SoxrRuntimeSpec = soxr_runtime_spec_t;
 
 class SOXRPP_EXPORT SoxResampler {
   private:
     soxr_t m_soxr{nullptr};
     std::optional<SoxrIoSpec> m_io_spec;
-    // Type soxr_io_spec_t* is erased to not require soxr.h
-    void* m_io_spec_internal{0};
+    std::optional<SoxrQualitySpec> m_quality_spec;
+    // Types are erased to not require soxr.h
+    void* m_io_spec_internal{nullptr};
+    void* m_quality_spec_internal{nullptr};
 
   public:
     SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const std::optional<SoxrIoSpec>& io_spec,
-                 const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec);
+                 const std::optional<SoxrQualitySpec>& quality_spec, const soxr_runtime_spec_t* runtime_spec);
     ~SoxResampler();
 
     void process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone);
@@ -77,6 +86,6 @@ class SOXRPP_EXPORT SoxResampler {
 
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
                            soxr_out_t out, size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec,
-                           const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec);
+                           const std::optional<SoxrQualitySpec>& quality_spec, const soxr_runtime_spec_t* runtime_spec);
 
 } // namespace soxrpp
