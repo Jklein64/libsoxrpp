@@ -33,10 +33,8 @@ soxr_quality_spec_t convert_quality_spec(const soxrpp::SoxrQualitySpec& quality_
 
 namespace soxrpp {
 
-SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
-                           const std::optional<SoxrIoSpec>& io_spec = std::nullopt,
-                           const std::optional<SoxrQualitySpec>& quality_spec = std::nullopt,
-                           const soxr_runtime_spec_t* runtime_spec = 0)
+SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const std::optional<SoxrIoSpec>& io_spec,
+                           const std::optional<SoxrQualitySpec>& quality_spec, const soxr_runtime_spec_t* runtime_spec)
     : m_io_spec(io_spec) {
     soxr_error_t err;
     m_io_spec_internal = malloc(sizeof(soxr_io_spec_t));
@@ -92,8 +90,8 @@ void SoxResampler::clear() {
 }
 
 void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out,
-             size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec = std::nullopt,
-             const std::optional<SoxrQualitySpec>& quality_spec = std::nullopt, const soxr_runtime_spec_t* runtime_spec = 0) {
+             size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec, const std::optional<SoxrQualitySpec>& quality_spec,
+             const soxr_runtime_spec_t* runtime_spec) {
     soxr_io_spec_t* io_spec_ptr = nullptr;
     soxr_io_spec_t io_spec_raw;
     if (io_spec.has_value()) {

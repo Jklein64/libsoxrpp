@@ -69,8 +69,9 @@ class SOXRPP_EXPORT SoxResampler {
     void* m_quality_spec_internal{nullptr};
 
   public:
-    SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const std::optional<SoxrIoSpec>& io_spec,
-                 const std::optional<SoxrQualitySpec>& quality_spec, const soxr_runtime_spec_t* runtime_spec);
+    SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
+                 const std::optional<SoxrIoSpec>& io_spec = std::nullopt,
+                 const std::optional<SoxrQualitySpec>& quality_spec = std::nullopt, const soxr_runtime_spec_t* runtime_spec = nullptr);
     ~SoxResampler();
 
     void process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone);
@@ -85,7 +86,8 @@ class SOXRPP_EXPORT SoxResampler {
 };
 
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
-                           soxr_out_t out, size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec,
-                           const std::optional<SoxrQualitySpec>& quality_spec, const soxr_runtime_spec_t* runtime_spec);
+                           soxr_out_t out, size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec = std::nullopt,
+                           const std::optional<SoxrQualitySpec>& quality_spec = std::nullopt,
+                           const soxr_runtime_spec_t* runtime_spec = nullptr);
 
 } // namespace soxrpp
