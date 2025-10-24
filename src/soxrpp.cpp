@@ -77,9 +77,12 @@ void SoxResampler::clear() {
 }
 
 void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out,
-             size_t olen, size_t* odone, const SoxrIoSpec& io_spec, const soxr_quality_spec_t* quality_spec,
+             size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec, const soxr_quality_spec_t* quality_spec,
              const soxr_runtime_spec_t* runtime_spec) {
-    soxr_io_spec_t io_spec_raw = convert_io_spec(io_spec);
+    soxr_io_spec_t io_spec_raw;
+    if (io_spec.has_value()) {
+        io_spec_raw = convert_io_spec(*io_spec);
+    }
     throw_if_soxr_error(soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
                                      quality_spec, runtime_spec));
 }

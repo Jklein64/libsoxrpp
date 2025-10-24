@@ -76,7 +76,7 @@ SOXRPP_EXPORT class SoxResampler {
 };
 
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
-                           soxr_out_t out, size_t olen, size_t* odone, const SoxrIoSpec& io_spec,
+                           soxr_out_t out, size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec,
                            const soxr_quality_spec_t* quality_spec, const soxr_runtime_spec_t* runtime_spec);
 
 } // namespace soxrpp
