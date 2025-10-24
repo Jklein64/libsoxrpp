@@ -9,7 +9,7 @@
 
 namespace soxrpp {
 
-class SoxrError : std::exception {
+class SOXRPP_EXPORT SoxrError : std::exception {
   private:
     std::string message;
 
@@ -22,7 +22,7 @@ class SoxrError : std::exception {
     }
 };
 
-enum class SoxrDataType {
+enum class SOXRPP_EXPORT SoxrDataType {
     /* Internal; do not use: */
     Float32,
     Float64,
@@ -43,7 +43,7 @@ enum class SoxrDataType {
     Int16_S
 };
 
-struct SoxrIoSpec {
+struct SOXRPP_EXPORT SoxrIoSpec {
     SoxrDataType itype, otype;
     double scale;
     unsigned long flags; // TODO how best to expose flags?
@@ -52,7 +52,7 @@ struct SoxrIoSpec {
 // using SoxrQualitySpec = soxr_quality_spec_t;
 // using SoxrRuntimeSpec = soxr_runtime_spec_t;
 
-class SoxResampler {
+class SOXRPP_EXPORT SoxResampler {
   private:
     soxr_t m_soxr{nullptr};
     std::optional<SoxrIoSpec> m_io_spec;
