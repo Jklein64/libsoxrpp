@@ -7,6 +7,49 @@
 
 namespace soxrpp {
 
+// class SoxrError : std::exception {
+//   private:
+//     std::string message;
+
+//   public:
+//     SoxrError(const std::string& message)
+//         : message(message) {}
+
+//     const char* what() const noexcept override {
+//         return message.c_str();
+//     }
+// };
+
+// enum class SoxrDataType {
+//     /* Internal; do not use: */
+//     Float32,
+//     Float64,
+//     Int32,
+//     Int16,
+//     Split = 4,
+
+//     /* Use for interleaved channels: */
+//     Float32_I = Float32,
+//     Float64_I,
+//     Int32_I,
+//     Int16_I,
+
+//     /* Use for split channels: */
+//     Float32_S = Split,
+//     Float64_S,
+//     Int32_S,
+//     Int16_S
+// };
+
+// struct SoxrIoSpec {
+//     SoxrDataType itype, otype;
+//     double scale;
+//     unsigned long flags; // TODO how to expose flags?
+// };
+
+// using SoxrQualitySpec = soxr_quality_spec_t;
+// using SoxrRuntimeSpec = soxr_runtime_spec_t;
+
 SOXRPP_EXPORT class SoxResampler {
   private:
     soxr_t m_soxr{nullptr};
@@ -25,10 +68,10 @@ SOXRPP_EXPORT class SoxResampler {
     double delay();
     char const* engine();
     soxr_error_t clear();
-
-    soxr_error_t oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
-                         soxr_out_t out, size_t olen, size_t* odone, const soxr_io_spec_t*, const soxr_quality_spec_t*,
-                         const soxr_runtime_spec_t*);
 };
+
+SOXRPP_EXPORT soxr_error_t oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen,
+                                   size_t* idone, soxr_out_t out, size_t olen, size_t* odone, const soxr_io_spec_t*,
+                                   const soxr_quality_spec_t*, const soxr_runtime_spec_t*);
 
 } // namespace soxrpp
