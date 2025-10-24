@@ -13,9 +13,7 @@ include(cmake/utils.cmake)
 include(GNUInstallDirs)
 
 # LIBSOXRPP_SHARED_LIBS determines static/shared build when defined
-option(LIBSOXRPP_BUILD_TESTS "Build mylib tests" OFF)
-option(LIBSOXRPP_BUILD_EXAMPLES "Build mylib examples" OFF)
-option(LIBSOXRPP_INSTALL "Generate target for installing mylib" ${PROJECT_IS_TOP_LEVEL})
+option(LIBSOXRPP_INSTALL "Generate target for installing libsoxrpp" ${PROJECT_IS_TOP_LEVEL})
 set_if_undefined(LIBSOXRPP_INSTALL_CMAKEDIR 
     "${CMAKE_INSTALL_LIBDIR}/cmake/libsoxrpp-${PROJECT_VERSION}" CACHE STRING 
     "Install path for libsoxrpp package-related CMake files")
@@ -51,28 +49,22 @@ list(APPEND sources
     "${CMAKE_CURRENT_BINARY_DIR}/include/libsoxrpp/${export_file_name}")
 
 include(CMakePackageConfigHelpers)
+
 target_sources(libsoxrpp PRIVATE ${sources})
-target_compile_definitions(libsoxrpp 
-    PUBLIC 
-        "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:LIBSOXRPP_STATIC_DEFINE>")
+target_compile_definitions(libsoxrpp PUBLIC "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:LIBSOXRPP_STATIC_DEFINE>")
 
 target_include_directories(libsoxrpp
     PUBLIC
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
-        "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-    PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/src")
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
 
 set_target_properties(libsoxrpp PROPERTIES
-    PUBLIC_HEADER "${public_headers}"
     SOVERSION ${PROJECT_VERSION_MAJOR}
     VERSION ${PROJECT_VERSION})
 
 if(LIBSOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
-    configure_package_config_file(cmake/libsoxrpp-config.cmake.in
-    libsoxrpp-config.cmake
-    INSTALL_DESTINATION "${LIBSOXRPP_INSTALL_CMAKEDIR}")
+    configure_package_config_file(cmake/libsoxrpp-config.cmake libsoxrpp-config.cmake
+        INSTALL_DESTINATION "${LIBSOXRPP_INSTALL_CMAKEDIR}")
 
     write_basic_package_version_file(libsoxrpp-config-version.cmake
         COMPATIBILITY SameMajorVersion)
@@ -81,8 +73,13 @@ if(LIBSOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
         RUNTIME COMPONENT libsoxrpp
         LIBRARY COMPONENT libsoxrpp NAMELINK_COMPONENT libsoxrpp-dev
         ARCHIVE COMPONENT libsoxrpp-dev
-        PUBLIC_HEADER COMPONENT libsoxrpp-dev
-            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libsoxrpp")
+        INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+    install(DIRECTORY include/
+        TYPE INCLUDE
+        COMPONENT libsoxrpp-dev)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/libsoxrpp/${export_file_name}"
+        COMPONENT libsoxrpp-dev
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/libsoxrpp")
 
     set(targets_file "libsoxrpp-shared-targets.cmake")
 
