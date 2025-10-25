@@ -155,6 +155,14 @@ void SoxResampler::clear() {
     throw_if_soxr_error(soxr_clear(m_soxr));
 }
 
+void SoxResampler::set_io_ratio(double io_ratio, size_t slew_len) {
+    soxr_set_io_ratio(m_soxr, io_ratio, slew_len);
+}
+
+void SoxResampler::set_num_channels(unsigned int num_channels) {
+    soxr_set_num_channels(m_soxr, num_channels);
+}
+
 void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out,
              size_t olen, size_t* odone, const SoxrIoSpec& io_spec, const SoxrQualitySpec& quality_spec,
              const SoxrRuntimeSpec& runtime_spec) {

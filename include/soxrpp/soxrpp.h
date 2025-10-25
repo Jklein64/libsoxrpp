@@ -133,6 +133,10 @@ class SOXRPP_EXPORT SoxResampler {
     double delay() noexcept;
     char const* engine() noexcept;
     void clear();
+
+    // Advanced
+    void set_io_ratio(double io_ratio, size_t slew_len);
+    void set_num_channels(unsigned int num_channels);
 };
 
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
