@@ -21,6 +21,7 @@ target_include_directories(soxrpp
     INTERFACE
         # The soxr headers aren't correctly forwarded for some reason...
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${soxr_SOURCE_DIR}/src>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 if (${PROJECT_IS_TOP_LEVEL})

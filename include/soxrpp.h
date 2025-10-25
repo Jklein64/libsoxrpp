@@ -162,8 +162,8 @@ class SoxResampler {
                         const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
         soxr_error_t err;
         soxr_io_spec_t io_spec_raw = (soxr_io_spec_t){
-            .itype = static_cast<int>(itype),
-            .otype = static_cast<int>(otype),
+            .itype = static_cast<soxr_datatype_t>(itype),
+            .otype = static_cast<soxr_datatype_t>(otype),
             .scale = io_spec.scale,
             .flags = io_spec.flags,
         };
