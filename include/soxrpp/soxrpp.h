@@ -43,6 +43,28 @@ enum class SOXRPP_EXPORT SoxrDataType {
     Int16_S
 };
 
+enum class SOXRPP_EXPORT SoxrQualityRecipe {
+    Quick = 0,    /* 'Quick' cubic interpolation. */
+    Low = 1,      /* 'Low' 16-bit with larger rolloff. */
+    Medium = 2,   /* 'Medium' 16-bit with medium rolloff. */
+    High = 4,     /* 'High quality' 20-bit. */
+    VeryHigh = 6, /* 'Very high quality' 28-bit. */
+
+    B16 = 3,
+    B20 = 4,
+    B24 = 5,
+    B28 = 6,
+    B32 = 7,
+    /* Reserved for internal use (to be removed): */
+    LSR0 = 8,  /* 'Best sinc'. */
+    LSR1 = 9,  /* 'Medium sinc'. */
+    LSR2 = 10, /* 'Fast sinc'. */
+    LinearPhase = 0x00,
+    IntermediatePhase = 0x10,
+    MinimumPhase = 0x30,
+    SteepFilter = 0x40,
+};
+
 struct SOXRPP_EXPORT SoxrIoSpec {
     SoxrDataType itype, otype;
     double scale;
@@ -60,7 +82,7 @@ struct SOXRPP_EXPORT SoxrQualitySpec {
     unsigned long flags;
 
     SoxrQualitySpec() = delete;
-    SoxrQualitySpec(unsigned long recipe, unsigned long flags);
+    SoxrQualitySpec(SoxrQualityRecipe recipe, unsigned long flags);
 };
 
 // using SoxrRuntimeSpec = soxr_runtime_spec_t;
@@ -72,7 +94,8 @@ class SOXRPP_EXPORT SoxResampler {
   public:
     SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
                  const SoxrIoSpec& io_spec = SoxrIoSpec(SoxrDataType::Float32_I, SoxrDataType::Float32_I),
-                 const std::optional<SoxrQualitySpec>& quality_spec = std::nullopt, const soxr_runtime_spec_t* runtime_spec = nullptr);
+                 const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::High, 0),
+                 const soxr_runtime_spec_t* runtime_spec = nullptr);
     ~SoxResampler();
 
     void process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone);
@@ -89,7 +112,7 @@ class SOXRPP_EXPORT SoxResampler {
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
                            soxr_out_t out, size_t olen, size_t* odone,
                            const SoxrIoSpec& io_spec = SoxrIoSpec(SoxrDataType::Float32_I, SoxrDataType::Float32_I),
-                           const std::optional<SoxrQualitySpec>& quality_spec = std::nullopt,
+                           const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0),
                            const soxr_runtime_spec_t* runtime_spec = nullptr);
 
 } // namespace soxrpp

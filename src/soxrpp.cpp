@@ -12,6 +12,11 @@ soxr_datatype_t convert_datatype(const soxrpp::SoxrDataType& datatype) {
     return static_cast<soxr_datatype_t>(datatype);
 }
 
+unsigned long convert_quality_recipe(const soxrpp::SoxrQualityRecipe& recipe) {
+    // Assumes that the enum values align with the internal soxr #defines
+    return static_cast<unsigned long>(recipe);
+}
+
 soxr_io_spec_t convert_io_spec(const soxrpp::SoxrIoSpec& io_spec) {
     return (soxr_io_spec_t){
         .itype = convert_datatype(io_spec.itype),
@@ -44,8 +49,8 @@ SoxrIoSpec::SoxrIoSpec(SoxrDataType itype, SoxrDataType otype) {
     this->flags = io_spec.flags;
 }
 
-SoxrQualitySpec::SoxrQualitySpec(unsigned long recipe, unsigned long flags) {
-    soxr_quality_spec_t quality_spec = soxr_quality_spec(recipe, flags);
+SoxrQualitySpec::SoxrQualitySpec(SoxrQualityRecipe recipe, unsigned long flags) {
+    soxr_quality_spec_t quality_spec = soxr_quality_spec(convert_quality_recipe(recipe), flags);
     if (quality_spec.e) {
         throw SoxrError(static_cast<const char*>(quality_spec.e));
     }
@@ -57,16 +62,12 @@ SoxrQualitySpec::SoxrQualitySpec(unsigned long recipe, unsigned long flags) {
 }
 
 SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const SoxrIoSpec& io_spec,
-                           const std::optional<SoxrQualitySpec>& quality_spec, const soxr_runtime_spec_t* runtime_spec) {
+                           const SoxrQualitySpec& quality_spec, const soxr_runtime_spec_t* runtime_spec) {
     soxr_error_t err;
     soxr_io_spec_t io_spec_raw = convert_io_spec(io_spec);
-    soxr_quality_spec_t quality_spec_raw;
-    if (quality_spec.has_value()) {
-        quality_spec_raw = convert_quality_spec(*quality_spec);
-    }
+    soxr_quality_spec_t quality_spec_raw = convert_quality_spec(quality_spec);
     // m_soxr does not hold data from any of the pointers passed into soxr_create()
-    m_soxr = soxr_create(input_rate, output_rate, num_channels, &err, &io_spec_raw,
-                         quality_spec.has_value() ? &quality_spec_raw : nullptr, runtime_spec);
+    m_soxr = soxr_create(input_rate, output_rate, num_channels, &err, &io_spec_raw, &quality_spec_raw, runtime_spec);
     throw_if_soxr_error(err);
 }
 
@@ -113,15 +114,12 @@ void SoxResampler::clear() {
 }
 
 void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out,
-             size_t olen, size_t* odone, const SoxrIoSpec& io_spec, const std::optional<SoxrQualitySpec>& quality_spec,
+             size_t olen, size_t* odone, const SoxrIoSpec& io_spec, const SoxrQualitySpec& quality_spec,
              const soxr_runtime_spec_t* runtime_spec) {
     soxr_io_spec_t io_spec_raw = convert_io_spec(io_spec);
-    soxr_quality_spec_t quality_spec_raw;
-    if (quality_spec.has_value()) {
-        quality_spec_raw = convert_quality_spec(*quality_spec);
-    }
+    soxr_quality_spec_t quality_spec_raw = convert_quality_spec(quality_spec);
     throw_if_soxr_error(soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
-                                     quality_spec.has_value() ? &quality_spec_raw : nullptr, runtime_spec));
+                                     &quality_spec_raw, runtime_spec));
 }
 
 } // namespace soxrpp
