@@ -82,6 +82,15 @@ struct SoxrIoSpec {
         this->scale = 1;
         this->flags = 0;
     }
+
+    inline soxr_io_spec_t c_struct() {
+        return (soxr_io_spec_t){
+            .itype = static_cast<soxr_datatype_t>(itype),
+            .otype = static_cast<soxr_datatype_t>(otype),
+            .scale = this->scale,
+            .flags = this->flags,
+        };
+    }
 };
 
 namespace SoxrQualityFlags {
@@ -118,6 +127,16 @@ struct SoxrQualitySpec {
         this->stopband_begin = quality_spec.stopband_begin;
         this->flags = quality_spec.flags;
     }
+
+    inline soxr_quality_spec_t c_struct() {
+        return (soxr_quality_spec_t){
+            .precision = this->precision,
+            .phase_response = this->phase_response,
+            .passband_end = this->passband_end,
+            .stopband_begin = this->stopband_begin,
+            .flags = this->flags,
+        };
+    }
 };
 
 namespace SoxrRuntimeFlags {
@@ -148,6 +167,16 @@ struct SoxrRuntimeSpec {
         this->num_threads = runtime_spec.num_threads;
         this->flags = runtime_spec.flags;
     }
+
+    inline soxr_runtime_spec_t c_struct() noexcept {
+        return (soxr_runtime_spec_t){
+            .log2_min_dft_size = this->log2_min_dft_size,
+            .log2_large_dft_size = this->log2_large_dft_size,
+            .coef_size_kbytes = this->coef_size_kbytes,
+            .num_threads = this->num_threads,
+            .flags = this->flags,
+        };
+    }
 };
 
 template <SoxrDataType itype = SoxrDataType::Float32_I, SoxrDataType otype = SoxrDataType::Float32_I>
@@ -161,26 +190,9 @@ class SoxResampler {
                         const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::High, 0),
                         const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
         soxr_error_t err;
-        soxr_io_spec_t io_spec_raw = (soxr_io_spec_t){
-            .itype = static_cast<soxr_datatype_t>(itype),
-            .otype = static_cast<soxr_datatype_t>(otype),
-            .scale = io_spec.scale,
-            .flags = io_spec.flags,
-        };
-        soxr_quality_spec_t quality_spec_raw = (soxr_quality_spec_t){
-            .precision = quality_spec.precision,
-            .phase_response = quality_spec.phase_response,
-            .passband_end = quality_spec.passband_end,
-            .stopband_begin = quality_spec.stopband_begin,
-            .flags = quality_spec.flags,
-        };
-        soxr_runtime_spec_t runtime_spec_raw = (soxr_runtime_spec_t){
-            .log2_min_dft_size = runtime_spec.log2_min_dft_size,
-            .log2_large_dft_size = runtime_spec.log2_large_dft_size,
-            .coef_size_kbytes = runtime_spec.coef_size_kbytes,
-            .num_threads = runtime_spec.num_threads,
-            .flags = runtime_spec.flags,
-        };
+        soxr_io_spec_t io_spec_raw = io_spec.c_struct();
+        soxr_quality_spec_t quality_spec_raw = quality_spec.c_struct();
+        soxr_runtime_spec_t runtime_spec_raw = runtime_spec.c_struct();
         m_soxr = soxr_create(input_rate, output_rate, num_channels, &err, &io_spec_raw, &quality_spec_raw, &runtime_spec_raw);
         if (err != 0) {
             throw soxrpp::SoxrError(err);
@@ -245,26 +257,9 @@ inline void oneshot(double input_rate, double output_rate, unsigned num_channels
                     const SoxrIoSpec<itype, otype>& io_spec = SoxrIoSpec<SoxrDataType::Float32_I, SoxrDataType::Float32_I>(),
                     const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0),
                     const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
-    soxr_io_spec_t io_spec_raw = (soxr_io_spec_t){
-        .itype = static_cast<soxr_datatype_t>(itype),
-        .otype = static_cast<soxr_datatype_t>(otype),
-        .scale = io_spec.scale,
-        .flags = io_spec.flags,
-    };
-    soxr_quality_spec_t quality_spec_raw = (soxr_quality_spec_t){
-        .precision = quality_spec.precision,
-        .phase_response = quality_spec.phase_response,
-        .passband_end = quality_spec.passband_end,
-        .stopband_begin = quality_spec.stopband_begin,
-        .flags = quality_spec.flags,
-    };
-    soxr_runtime_spec_t runtime_spec_raw = (soxr_runtime_spec_t){
-        .log2_min_dft_size = runtime_spec.log2_min_dft_size,
-        .log2_large_dft_size = runtime_spec.log2_large_dft_size,
-        .coef_size_kbytes = runtime_spec.coef_size_kbytes,
-        .num_threads = runtime_spec.num_threads,
-        .flags = runtime_spec.flags,
-    };
+    soxr_io_spec_t io_spec_raw = io_spec.c_struct();
+    soxr_quality_spec_t quality_spec_raw = quality_spec.c_struct();
+    soxr_runtime_spec_t runtime_spec_raw = runtime_spec.c_struct();
     soxr_error_t err = soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
                                     &quality_spec_raw, &runtime_spec_raw);
     if (err != 0) {
