@@ -47,6 +47,9 @@ struct SOXRPP_EXPORT SoxrIoSpec {
     SoxrDataType itype, otype;
     double scale;
     unsigned long flags; // TODO how best to expose flags?
+
+    SoxrIoSpec() = delete;
+    SoxrIoSpec(SoxrDataType itype, SoxrDataType otype);
 };
 
 struct SOXRPP_EXPORT SoxrQualitySpec {
@@ -55,6 +58,9 @@ struct SOXRPP_EXPORT SoxrQualitySpec {
     double passband_end;
     double stopband_begin;
     unsigned long flags;
+
+    SoxrQualitySpec() = delete;
+    SoxrQualitySpec(unsigned long recipe, unsigned long flags);
 };
 
 // using SoxrRuntimeSpec = soxr_runtime_spec_t;
@@ -62,11 +68,6 @@ struct SOXRPP_EXPORT SoxrQualitySpec {
 class SOXRPP_EXPORT SoxResampler {
   private:
     soxr_t m_soxr{nullptr};
-    std::optional<SoxrIoSpec> m_io_spec;
-    std::optional<SoxrQualitySpec> m_quality_spec;
-    // Types are erased to not require soxr.h
-    void* m_io_spec_internal{nullptr};
-    void* m_quality_spec_internal{nullptr};
 
   public:
     SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
