@@ -69,13 +69,17 @@ namespace SoxrIoFlags {
 constexpr unsigned long TPDF = 0;
 constexpr unsigned long NoDither = 8u;
 } // namespace SoxrIoFlags
+template <SoxrDataType itype, SoxrDataType otype>
 struct SOXRPP_EXPORT SoxrIoSpec {
-    SoxrDataType itype, otype;
+    static_assert(static_cast<int>(itype) >= 0, "Invalid input type");
+    static_assert(static_cast<int>(otype) >= 0, "Invalid output type");
+    static_assert(static_cast<int>(itype) < 2 * static_cast<int>(SoxrDataType::Split), "Invalid input type");
+    static_assert(static_cast<int>(otype) < 2 * static_cast<int>(SoxrDataType::Split), "Invalid output type");
+
     double scale;
     unsigned long flags;
 
-    SoxrIoSpec() noexcept;
-    SoxrIoSpec(SoxrDataType itype, SoxrDataType otype);
+    SoxrIoSpec();
 };
 
 namespace SoxrQualityFlags {
@@ -113,13 +117,14 @@ struct SOXRPP_EXPORT SoxrRuntimeSpec {
     SoxrRuntimeSpec(unsigned int num_threads) noexcept;
 };
 
+template <SoxrDataType itype = SoxrDataType::Float32_I, SoxrDataType otype = SoxrDataType::Float32_I>
 class SOXRPP_EXPORT SoxResampler {
   private:
     soxr_t m_soxr{nullptr};
 
   public:
     SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
-                 const SoxrIoSpec& io_spec = SoxrIoSpec(SoxrDataType::Float32_I, SoxrDataType::Float32_I),
+                 const SoxrIoSpec<itype, otype>& io_spec = SoxrIoSpec<SoxrDataType::Float32_I, SoxrDataType::Float32_I>(),
                  const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::High, 0),
                  const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1));
     ~SoxResampler();
@@ -133,15 +138,12 @@ class SOXRPP_EXPORT SoxResampler {
     double delay() noexcept;
     char const* engine() noexcept;
     void clear();
-
-    // Advanced
-    void set_io_ratio(double io_ratio, size_t slew_len);
-    void set_num_channels(unsigned int num_channels);
 };
 
+template <SoxrDataType itype = SoxrDataType::Float32_I, SoxrDataType otype = SoxrDataType::Float32_I>
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
                            soxr_out_t out, size_t olen, size_t* odone,
-                           const SoxrIoSpec& io_spec = SoxrIoSpec(SoxrDataType::Float32_I, SoxrDataType::Float32_I),
+                           const SoxrIoSpec<itype, otype>& io_spec = SoxrIoSpec<SoxrDataType::Float32_I, SoxrDataType::Float32_I>(),
                            const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0),
                            const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1));
 

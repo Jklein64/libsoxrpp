@@ -17,10 +17,11 @@ unsigned long convert_quality_recipe(const soxrpp::SoxrQualityRecipe& recipe) {
     return static_cast<unsigned long>(recipe);
 }
 
-soxr_io_spec_t convert_io_spec(const soxrpp::SoxrIoSpec& io_spec) {
+template <soxrpp::SoxrDataType itype, soxrpp::SoxrDataType otype>
+soxr_io_spec_t convert_io_spec(const soxrpp::SoxrIoSpec<itype, otype>& io_spec) {
     return (soxr_io_spec_t){
-        .itype = convert_datatype(io_spec.itype),
-        .otype = convert_datatype(io_spec.otype),
+        .itype = convert_datatype(itype),
+        .otype = convert_datatype(otype),
         .scale = io_spec.scale,
         .flags = io_spec.flags,
     };
@@ -48,22 +49,15 @@ soxr_runtime_spec_t convert_runtime_spec(const soxrpp::SoxrRuntimeSpec& runtime_
 
 namespace soxrpp {
 
-SoxrIoSpec::SoxrIoSpec() noexcept {
-    this->itype = SoxrDataType::Float32_I;
-    this->otype = SoxrDataType::Float32_I;
-    this->scale = 1;
-    this->flags = 0;
-}
-
-SoxrIoSpec::SoxrIoSpec(SoxrDataType itype, SoxrDataType otype) {
-    soxr_io_spec_t io_spec = soxr_io_spec(convert_datatype(itype), convert_datatype(otype));
+template <SoxrDataType itype, SoxrDataType otype>
+SoxrIoSpec<itype, otype>::SoxrIoSpec() {
+    // Use soxr's error checking
+    soxr_io_spec_t io_spec = soxr_io_spec(static_cast<soxr_datatype_t>(itype), static_cast<soxr_datatype_t>(otype));
     if (io_spec.e) {
         throw SoxrError(static_cast<const char*>(io_spec.e));
     }
-    this->itype = itype;
-    this->otype = otype;
-    this->scale = io_spec.scale;
-    this->flags = io_spec.flags;
+    this->scale = 1;
+    this->flags = 0;
 }
 
 SoxrQualitySpec::SoxrQualitySpec() noexcept {
@@ -103,8 +97,10 @@ SoxrRuntimeSpec::SoxrRuntimeSpec(unsigned int num_threads) noexcept {
     this->flags = runtime_spec.flags;
 }
 
-SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const SoxrIoSpec& io_spec,
-                           const SoxrQualitySpec& quality_spec, const SoxrRuntimeSpec& runtime_spec) {
+template <SoxrDataType itype, SoxrDataType otype>
+SoxResampler<itype, otype>::SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
+                                         const SoxrIoSpec<itype, otype>& io_spec, const SoxrQualitySpec& quality_spec,
+                                         const SoxrRuntimeSpec& runtime_spec) {
     soxr_error_t err;
     soxr_io_spec_t io_spec_raw = convert_io_spec(io_spec);
     soxr_quality_spec_t quality_spec_raw = convert_quality_spec(quality_spec);
@@ -113,19 +109,23 @@ SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int n
     throw_if_soxr_error(err);
 }
 
-SoxResampler::~SoxResampler() {
+template <SoxrDataType itype, SoxrDataType otype>
+SoxResampler<itype, otype>::~SoxResampler() {
     soxr_delete(m_soxr);
 }
 
-void SoxResampler::process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone) {
+template <SoxrDataType itype, SoxrDataType otype>
+void SoxResampler<itype, otype>::process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone) {
     throw_if_soxr_error(soxr_process(m_soxr, in, ilen, idone, out, olen, odone));
 }
 
-void SoxResampler::set_input_fn(soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
+template <SoxrDataType itype, SoxrDataType otype>
+void SoxResampler<itype, otype>::set_input_fn(soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
     throw_if_soxr_error(soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen));
 }
 
-size_t SoxResampler::output(soxr_out_t data, size_t olen) {
+template <SoxrDataType itype, SoxrDataType otype>
+size_t SoxResampler<itype, otype>::output(soxr_out_t data, size_t olen) {
     size_t odone = soxr_output(m_soxr, data, olen);
     soxr_error_t err = soxr_error(m_soxr);
     if (err != 0) {
@@ -134,37 +134,35 @@ size_t SoxResampler::output(soxr_out_t data, size_t olen) {
     return odone;
 }
 
-std::optional<std::string> SoxResampler::error() noexcept {
+template <SoxrDataType itype, SoxrDataType otype>
+std::optional<std::string> SoxResampler<itype, otype>::error() noexcept {
     soxr_error_t err = soxr_error(m_soxr);
     return err == 0 ? std::nullopt : std::make_optional(err);
 }
 
-size_t* SoxResampler::num_clips() noexcept {
+template <SoxrDataType itype, SoxrDataType otype>
+size_t* SoxResampler<itype, otype>::num_clips() noexcept {
     return soxr_num_clips(m_soxr);
 }
 
-double SoxResampler::delay() noexcept {
+template <SoxrDataType itype, SoxrDataType otype>
+double SoxResampler<itype, otype>::delay() noexcept {
     return soxr_delay(m_soxr);
 }
 
-char const* SoxResampler::engine() noexcept {
+template <SoxrDataType itype, SoxrDataType otype>
+char const* SoxResampler<itype, otype>::engine() noexcept {
     return soxr_engine(m_soxr);
 }
 
-void SoxResampler::clear() {
+template <SoxrDataType itype, SoxrDataType otype>
+void SoxResampler<itype, otype>::clear() {
     throw_if_soxr_error(soxr_clear(m_soxr));
 }
 
-void SoxResampler::set_io_ratio(double io_ratio, size_t slew_len) {
-    soxr_set_io_ratio(m_soxr, io_ratio, slew_len);
-}
-
-void SoxResampler::set_num_channels(unsigned int num_channels) {
-    soxr_set_num_channels(m_soxr, num_channels);
-}
-
+template <SoxrDataType itype, SoxrDataType otype>
 void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out,
-             size_t olen, size_t* odone, const SoxrIoSpec& io_spec, const SoxrQualitySpec& quality_spec,
+             size_t olen, size_t* odone, const SoxrIoSpec<itype, otype>& io_spec, const SoxrQualitySpec& quality_spec,
              const SoxrRuntimeSpec& runtime_spec) {
     soxr_io_spec_t io_spec_raw = convert_io_spec(io_spec);
     soxr_quality_spec_t quality_spec_raw = convert_quality_spec(quality_spec);

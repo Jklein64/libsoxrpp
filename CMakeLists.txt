@@ -9,8 +9,8 @@ project(soxrpp
 add_library(soxrpp)
 add_library(soxrpp::soxrpp ALIAS soxrpp)
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
-# Use at least C++17 for optional
-target_compile_features(soxrpp PUBLIC cxx_std_17)
+# Use at least C++20 for span and class-valued non-type templates
+target_compile_features(soxrpp PUBLIC cxx_std_20)
 
 include(cmake/utils.cmake)
 include(GNUInstallDirs)
