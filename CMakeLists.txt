@@ -6,113 +6,64 @@ project(soxrpp
     DESCRIPTION "C++ wrapper for libsoxr."
     LANGUAGES CXX C)
 
-add_library(soxrpp)
+add_library(soxrpp INTERFACE)
 add_library(soxrpp::soxrpp ALIAS soxrpp)
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION})
 # Use at least C++20 for span and class-valued non-type templates
-target_compile_features(soxrpp PUBLIC cxx_std_20)
-
-include(cmake/utils.cmake)
-include(GNUInstallDirs)
-
-# SOXRPP_SHARED_LIBS determines static/shared build when defined
-option(SOXRPP_INSTALL "Generate target for installing soxrpp" ${PROJECT_IS_TOP_LEVEL})
-set_if_undefined(SOXRPP_INSTALL_CMAKEDIR 
-    "${CMAKE_INSTALL_LIBDIR}/cmake/soxrpp-${PROJECT_VERSION}" CACHE STRING 
-    "Install path for soxrpp package-related CMake files")
-
-if(DEFINED SOXRPP_SHARED_LIBS)
-    set(BUILD_SHARED_LIBS ${SOXRPP_SHARED_LIBS})
-endif()
-
-set_if_undefined(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set_if_undefined(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
-
-include(GenerateExportHeader)
-set(export_file_name "export_shared.h")
-
-if(NOT BUILD_SHARED_LIBS)
-    set(export_file_name "export_static.h")
-endif()
-
-generate_export_header(soxrpp EXPORT_FILE_NAME
-    include/soxrpp/${export_file_name})
-
-set(public_headers
-    include/soxrpp/export.h
-    include/soxrpp/soxrpp.h)
-set(sources
-    ${public_headers}
-    src/soxrpp.cpp)
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${sources})
-
-list(APPEND public_headers
-    "${CMAKE_CURRENT_BINARY_DIR}/include/soxrpp/${export_file_name}")
-list(APPEND sources
-    "${CMAKE_CURRENT_BINARY_DIR}/include/soxrpp/${export_file_name}")
-
-include(CMakePackageConfigHelpers)
-
-target_sources(soxrpp PRIVATE ${sources})
-target_compile_definitions(soxrpp PUBLIC "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:SOXRPP_STATIC_DEFINE>")
-
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 target_include_directories(soxrpp
-    PUBLIC
+    INTERFACE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>")
-
-set_target_properties(soxrpp PROPERTIES
-    SOVERSION ${PROJECT_VERSION_MAJOR}
-    VERSION ${PROJECT_VERSION})
+        "$<BUILD_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>")
 
 include(FetchContent)
 # Use a fork of soxr that has been patched for working with C++ as a library (for a Python wrapper)
 FetchContent_Declare(soxr GIT_REPOSITORY https://github.com/dofuuz/soxr.git GIT_TAG a66f3ee)
 FetchContent_MakeAvailable(soxr)
-target_link_libraries(soxrpp PRIVATE soxr)
+target_link_libraries(soxrpp INTERFACE soxr)
 # Ugly hack because soxr CMake gets confused by modern CMake
 # TODO make this private once the wrapper is properly abstracted
-target_include_directories(soxrpp PUBLIC
-    # Can remove generators once PUBLIC becomes PRIVATE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/soxrpp ${soxr_SOURCE_DIR}/src>  
-    $<INSTALL_INTERFACE:include/soxrpp>  # TODO do I need find_package here for soxr?
-)
+# target_include_directories(soxrpp INTERFACE
+#     # Can remove generators once PUBLIC becomes PRIVATE
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/soxrpp ${soxr_SOURCE_DIR}/src>  
+#     $<INSTALL_INTERFACE:include/soxrpp>  # TODO do I need find_package here for soxr?
+# )
 
-if(SOXRPP_INSTALL AND NOT CMAKE_SKIP_INSTALL_RULES)
-    configure_package_config_file(cmake/soxrpp-config.cmake.in soxrpp-config.cmake
-        INSTALL_DESTINATION "${SOXRPP_INSTALL_CMAKEDIR}")
+include(cmake/utils.cmake)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-    write_basic_package_version_file(soxrpp-config-version.cmake
+if(NOT CMAKE_SKIP_INSTALL_RULES)
+    # See https://softwarecraft.ch/cmake-interface-lib/
+    install(
+        TARGETS ${PROJECT_NAME} soxr
+        EXPORT ${PROJECT_NAME}-targets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+    write_basic_package_version_file(
+        "${PROJECT_NAME}-config-version.cmake"
+        VERSION ${PROJECT_VERSION}
         COMPATIBILITY SameMajorVersion)
 
-    install(TARGETS soxrpp soxr EXPORT soxrpp_export
-        RUNTIME COMPONENT soxrpp
-        LIBRARY COMPONENT soxrpp NAMELINK_COMPONENT soxrpp-dev
-        ARCHIVE COMPONENT soxrpp-dev
-        INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-    install(DIRECTORY include/
-        TYPE INCLUDE
-        COMPONENT soxrpp-dev)
-    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/include/soxrpp/${export_file_name}"
-        COMPONENT soxrpp-dev
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/soxrpp")
+    configure_package_config_file(
+        "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in"
+        "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+        INSTALL_DESTINATION
+        ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
+    
+    install(
+        EXPORT ${PROJECT_NAME}-targets
+        FILE ${PROJECT_NAME}-targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+        # soxr exports LINK_INTERFACE_LIRARIES, so this is needed for compatibility
+        EXPORT_LINK_INTERFACE_LIBRARIES)
 
-    set(targets_file "soxrpp-shared-targets.cmake")
-
-    if(NOT BUILD_SHARED_LIBS)
-        set(targets_file "soxrpp-static-targets.cmake")
-    endif()
-
-    install(EXPORT soxrpp_export
-        COMPONENT soxrpp-dev
-        FILE "${targets_file}"
-        DESTINATION "${SOXRPP_INSTALL_CMAKEDIR}"
-        EXPORT_LINK_INTERFACE_LIBRARIES
-        NAMESPACE soxrpp::)
-
-    install(FILES
-        "${CMAKE_CURRENT_BINARY_DIR}/soxrpp-config.cmake"
-        "${CMAKE_CURRENT_BINARY_DIR}/soxrpp-config-version.cmake"
-        COMPONENT soxrpp-dev
-        DESTINATION "${SOXRPP_INSTALL_CMAKEDIR}")
+    install(
+        FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
+              "${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/ DESTINATION include)
 endif()
