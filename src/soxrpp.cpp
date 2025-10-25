@@ -36,7 +36,24 @@ soxr_quality_spec_t convert_quality_spec(const soxrpp::SoxrQualitySpec& quality_
     };
 }
 
+soxr_runtime_spec_t convert_runtime_spec(const soxrpp::SoxrRuntimeSpec& runtime_spec) {
+    return (soxr_runtime_spec_t){
+        .log2_min_dft_size = runtime_spec.log2_min_dft_size,
+        .log2_large_dft_size = runtime_spec.log2_large_dft_size,
+        .coef_size_kbytes = runtime_spec.coef_size_kbytes,
+        .num_threads = runtime_spec.num_threads,
+        .flags = runtime_spec.flags,
+    };
+}
+
 namespace soxrpp {
+
+SoxrIoSpec::SoxrIoSpec() noexcept {
+    this->itype = SoxrDataType::Float32_I;
+    this->otype = SoxrDataType::Float32_I;
+    this->scale = 1;
+    this->flags = 0;
+}
 
 SoxrIoSpec::SoxrIoSpec(SoxrDataType itype, SoxrDataType otype) {
     soxr_io_spec_t io_spec = soxr_io_spec(convert_datatype(itype), convert_datatype(otype));
@@ -47,6 +64,14 @@ SoxrIoSpec::SoxrIoSpec(SoxrDataType itype, SoxrDataType otype) {
     this->otype = otype;
     this->scale = io_spec.scale;
     this->flags = io_spec.flags;
+}
+
+SoxrQualitySpec::SoxrQualitySpec() noexcept {
+    this->precision = 20;
+    this->phase_response = 50;
+    this->passband_end = 0.913;
+    this->stopband_begin = 1;
+    this->flags = 0;
 }
 
 SoxrQualitySpec::SoxrQualitySpec(SoxrQualityRecipe recipe, unsigned long flags) {
@@ -61,13 +86,30 @@ SoxrQualitySpec::SoxrQualitySpec(SoxrQualityRecipe recipe, unsigned long flags) 
     this->flags = quality_spec.flags;
 }
 
+SoxrRuntimeSpec::SoxrRuntimeSpec() noexcept {
+    this->log2_min_dft_size = 10;
+    this->log2_large_dft_size = 17;
+    this->coef_size_kbytes = 400;
+    this->num_threads = 1;
+    this->flags = 0;
+}
+
+SoxrRuntimeSpec::SoxrRuntimeSpec(unsigned int num_threads) noexcept {
+    soxr_runtime_spec_t runtime_spec = soxr_runtime_spec(num_threads);
+    this->log2_min_dft_size = runtime_spec.log2_min_dft_size;
+    this->log2_large_dft_size = runtime_spec.log2_large_dft_size;
+    this->coef_size_kbytes = runtime_spec.coef_size_kbytes;
+    this->num_threads = runtime_spec.num_threads;
+    this->flags = runtime_spec.flags;
+}
+
 SoxResampler::SoxResampler(double input_rate, double output_rate, unsigned int num_channels, const SoxrIoSpec& io_spec,
-                           const SoxrQualitySpec& quality_spec, const soxr_runtime_spec_t* runtime_spec) {
+                           const SoxrQualitySpec& quality_spec, const SoxrRuntimeSpec& runtime_spec) {
     soxr_error_t err;
     soxr_io_spec_t io_spec_raw = convert_io_spec(io_spec);
     soxr_quality_spec_t quality_spec_raw = convert_quality_spec(quality_spec);
-    // m_soxr does not hold data from any of the pointers passed into soxr_create()
-    m_soxr = soxr_create(input_rate, output_rate, num_channels, &err, &io_spec_raw, &quality_spec_raw, runtime_spec);
+    soxr_runtime_spec_t runtime_spec_raw = convert_runtime_spec(runtime_spec);
+    m_soxr = soxr_create(input_rate, output_rate, num_channels, &err, &io_spec_raw, &quality_spec_raw, &runtime_spec_raw);
     throw_if_soxr_error(err);
 }
 
@@ -115,11 +157,12 @@ void SoxResampler::clear() {
 
 void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out,
              size_t olen, size_t* odone, const SoxrIoSpec& io_spec, const SoxrQualitySpec& quality_spec,
-             const soxr_runtime_spec_t* runtime_spec) {
+             const SoxrRuntimeSpec& runtime_spec) {
     soxr_io_spec_t io_spec_raw = convert_io_spec(io_spec);
     soxr_quality_spec_t quality_spec_raw = convert_quality_spec(quality_spec);
+    soxr_runtime_spec_t runtime_spec_raw = convert_runtime_spec(runtime_spec);
     throw_if_soxr_error(soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
-                                     &quality_spec_raw, runtime_spec));
+                                     &quality_spec_raw, &runtime_spec_raw));
 }
 
 } // namespace soxrpp

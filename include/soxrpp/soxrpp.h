@@ -70,7 +70,7 @@ struct SOXRPP_EXPORT SoxrIoSpec {
     double scale;
     unsigned long flags; // TODO how best to expose flags?
 
-    SoxrIoSpec() = delete;
+    SoxrIoSpec() noexcept;
     SoxrIoSpec(SoxrDataType itype, SoxrDataType otype);
 };
 
@@ -81,11 +81,20 @@ struct SOXRPP_EXPORT SoxrQualitySpec {
     double stopband_begin;
     unsigned long flags;
 
-    SoxrQualitySpec() = delete;
+    SoxrQualitySpec() noexcept;
     SoxrQualitySpec(SoxrQualityRecipe recipe, unsigned long flags);
 };
 
-// using SoxrRuntimeSpec = soxr_runtime_spec_t;
+struct SOXRPP_EXPORT SoxrRuntimeSpec {
+    unsigned int log2_min_dft_size;
+    unsigned int log2_large_dft_size;
+    unsigned int coef_size_kbytes;
+    unsigned int num_threads;
+    unsigned long flags;
+
+    SoxrRuntimeSpec() noexcept;
+    SoxrRuntimeSpec(unsigned int num_threads) noexcept;
+};
 
 class SOXRPP_EXPORT SoxResampler {
   private:
@@ -95,7 +104,7 @@ class SOXRPP_EXPORT SoxResampler {
     SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
                  const SoxrIoSpec& io_spec = SoxrIoSpec(SoxrDataType::Float32_I, SoxrDataType::Float32_I),
                  const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::High, 0),
-                 const soxr_runtime_spec_t* runtime_spec = nullptr);
+                 const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1));
     ~SoxResampler();
 
     void process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone);
@@ -113,6 +122,6 @@ SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_c
                            soxr_out_t out, size_t olen, size_t* odone,
                            const SoxrIoSpec& io_spec = SoxrIoSpec(SoxrDataType::Float32_I, SoxrDataType::Float32_I),
                            const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0),
-                           const soxr_runtime_spec_t* runtime_spec = nullptr);
+                           const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1));
 
-} // namespace soxrpp
+} // namespace soxrp
