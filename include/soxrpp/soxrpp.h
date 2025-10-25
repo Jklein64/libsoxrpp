@@ -65,15 +65,27 @@ enum class SOXRPP_EXPORT SoxrQualityRecipe {
     SteepFilter = 0x40,
 };
 
+namespace SoxrIoFlags {
+constexpr unsigned long TPDF = 0;
+constexpr unsigned long NoDither = 8u;
+} // namespace SoxrIoFlags
 struct SOXRPP_EXPORT SoxrIoSpec {
     SoxrDataType itype, otype;
     double scale;
-    unsigned long flags; // TODO how best to expose flags?
+    unsigned long flags;
 
     SoxrIoSpec() noexcept;
     SoxrIoSpec(SoxrDataType itype, SoxrDataType otype);
 };
 
+namespace SoxrQualityFlags {
+constexpr unsigned long RolloffSmall = 0u;
+constexpr unsigned long RolloffMedium = 1u;
+constexpr unsigned long RolloffNone = 2u;
+constexpr unsigned long HiPrecisionClock = 8u;
+constexpr unsigned long DoublePrecisionClock = 16u;
+constexpr unsigned long VariableRate = 32u;
+}; // namespace SoxrQualityFlags
 struct SOXRPP_EXPORT SoxrQualitySpec {
     double precision;
     double phase_response;
@@ -85,6 +97,11 @@ struct SOXRPP_EXPORT SoxrQualitySpec {
     SoxrQualitySpec(SoxrQualityRecipe recipe, unsigned long flags);
 };
 
+namespace SoxrRuntimeFlags {
+constexpr unsigned long CoeffInterpAuto = 0u;
+constexpr unsigned long CoeffInterpLow = 2u;
+constexpr unsigned long CoeffInterpHigh = 3u;
+} // namespace SoxrRuntimeFlags
 struct SOXRPP_EXPORT SoxrRuntimeSpec {
     unsigned int log2_min_dft_size;
     unsigned int log2_large_dft_size;
@@ -124,4 +141,4 @@ SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_c
                            const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0),
                            const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1));
 
-} // namespace soxrp
+} // namespace soxrpp
