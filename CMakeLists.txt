@@ -14,7 +14,7 @@ target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
 include(FetchContent)
 # Use a fork of soxr that has been patched for working with C++ as a library (for a Python wrapper)
-FetchContent_Declare(soxr GIT_REPOSITORY https://github.com/dofuuz/soxr.git GIT_TAG a66f3ee)
+FetchContent_Declare(soxr GIT_REPOSITORY https://github.com/Jklein64/soxr.git GIT_TAG a431f4d)
 FetchContent_MakeAvailable(soxr)
 target_link_libraries(soxrpp INTERFACE soxr)
 target_include_directories(soxrpp

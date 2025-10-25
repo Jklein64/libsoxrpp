@@ -24,51 +24,44 @@ class SoxrError : std::exception {
 };
 
 enum class SoxrDataType {
-    /* Internal; do not use: */
-    Float32,
-    Float64,
-    Int32,
-    Int16,
-    Split = 4,
-
     /* Use for interleaved channels: */
-    Float32_I = Float32,
-    Float64_I,
-    Int32_I,
-    Int16_I,
+    Float32_I = soxr::SOXR_FLOAT32_I,
+    Float64_I = soxr::SOXR_FLOAT64_I,
+    Int32_I = soxr::SOXR_INT32_I,
+    Int16_I = soxr::SOXR_INT16_I,
 
     /* Use for split channels: */
-    Float32_S = Split,
-    Float64_S,
-    Int32_S,
-    Int16_S
+    Float32_S = soxr::SOXR_FLOAT32_S,
+    Float64_S = soxr::SOXR_FLOAT64_S,
+    Int32_S = soxr::SOXR_INT32_S,
+    Int16_S = soxr::SOXR_INT16_S
 };
 
 enum class SoxrQualityRecipe {
-    Quick = 0,    /* 'Quick' cubic interpolation. */
-    Low = 1,      /* 'Low' 16-bit with larger rolloff. */
-    Medium = 2,   /* 'Medium' 16-bit with medium rolloff. */
-    High = 4,     /* 'High quality' 20-bit. */
-    VeryHigh = 6, /* 'Very high quality' 28-bit. */
+    Quick = soxr::SOXR_QQ,     /* 'Quick' cubic interpolation. */
+    Low = soxr::SOXR_LQ,       /* 'Low' 16-bit with larger rolloff. */
+    Medium = soxr::SOXR_MQ,    /* 'Medium' 16-bit with medium rolloff. */
+    High = soxr::SOXR_HQ,      /* 'High quality' 20-bit. */
+    VeryHigh = soxr::SOXR_VHQ, /* 'Very high quality' 28-bit. */
 
-    B16 = 3,
-    B20 = 4,
-    B24 = 5,
-    B28 = 6,
-    B32 = 7,
+    B16 = soxr::SOXR_16_BITQ,
+    B20 = soxr::SOXR_20_BITQ,
+    B24 = soxr::SOXR_24_BITQ,
+    B28 = soxr::SOXR_28_BITQ,
+    B32 = soxr::SOXR_32_BITQ,
     /* Reserved for internal use (to be removed): */
-    LSR0 = 8,  /* 'Best sinc'. */
-    LSR1 = 9,  /* 'Medium sinc'. */
-    LSR2 = 10, /* 'Fast sinc'. */
-    LinearPhase = 0x00,
-    IntermediatePhase = 0x10,
-    MinimumPhase = 0x30,
-    SteepFilter = 0x40,
+    LSR0 = soxr::SOXR_LSR0Q, /* 'Best sinc'. */
+    LSR1 = soxr::SOXR_LSR1Q, /* 'Medium sinc'. */
+    LSR2 = soxr::SOXR_LSR2Q, /* 'Fast sinc'. */
+    LinearPhase = soxr::SOXR_LINEAR_PHASE,
+    IntermediatePhase = soxr::SOXR_INTERMEDIATE_PHASE,
+    MinimumPhase = soxr::SOXR_MINIMUM_PHASE,
+    SteepFilter = soxr::SOXR_STEEP_FILTER
 };
 
 namespace SoxrIoFlags {
-constexpr unsigned long TPDF = 0;
-constexpr unsigned long NoDither = 8u;
+constexpr unsigned long TPDF = soxr::SOXR_TPDF;
+constexpr unsigned long NoDither = soxr::SOXR_NO_DITHER;
 } // namespace SoxrIoFlags
 template <SoxrDataType itype, SoxrDataType otype>
 struct SoxrIoSpec {
@@ -97,12 +90,12 @@ struct SoxrIoSpec {
 };
 
 namespace SoxrQualityFlags {
-constexpr unsigned long RolloffSmall = 0u;
-constexpr unsigned long RolloffMedium = 1u;
-constexpr unsigned long RolloffNone = 2u;
-constexpr unsigned long HiPrecisionClock = 8u;
-constexpr unsigned long DoublePrecisionClock = 16u;
-constexpr unsigned long VariableRate = 32u;
+constexpr unsigned long RolloffSmall = soxr::SOXR_ROLLOFF_SMALL;
+constexpr unsigned long RolloffMedium = soxr::SOXR_ROLLOFF_MEDIUM;
+constexpr unsigned long RolloffNone = soxr::SOXR_ROLLOFF_NONE;
+constexpr unsigned long HiPrecisionClock = soxr::SOXR_HI_PREC_CLOCK;
+constexpr unsigned long DoublePrecision = soxr::SOXR_DOUBLE_PRECISION;
+constexpr unsigned long VariableRate = soxr::SOXR_VR;
 }; // namespace SoxrQualityFlags
 struct SoxrQualitySpec {
     double precision;
@@ -143,9 +136,9 @@ struct SoxrQualitySpec {
 };
 
 namespace SoxrRuntimeFlags {
-constexpr unsigned long CoeffInterpAuto = 0u;
-constexpr unsigned long CoeffInterpLow = 2u;
-constexpr unsigned long CoeffInterpHigh = 3u;
+constexpr unsigned long CoeffInterpAuto = soxr::SOXR_COEF_INTERP_AUTO;
+constexpr unsigned long CoeffInterpLow = soxr::SOXR_COEF_INTERP_LOW;
+constexpr unsigned long CoeffInterpHigh = soxr::SOXR_COEF_INTERP_HIGH;
 } // namespace SoxrRuntimeFlags
 struct SoxrRuntimeSpec {
     unsigned int log2_min_dft_size;
@@ -271,3 +264,7 @@ inline void oneshot(double input_rate, double output_rate, unsigned num_channels
 }
 
 } // namespace soxrpp
+
+#undef soxr_datatype_size
+#undef soxr_included
+#undef soxr_strerror
