@@ -182,7 +182,9 @@ class SoxResampler {
             .flags = runtime_spec.flags,
         };
         m_soxr = soxr_create(input_rate, output_rate, num_channels, &err, &io_spec_raw, &quality_spec_raw, &runtime_spec_raw);
-        throw_if_soxr_error(err);
+        if (err != 0) {
+            throw soxrpp::SoxrError(err);
+        }
     }
 
     inline ~SoxResampler() {
@@ -190,11 +192,17 @@ class SoxResampler {
     }
 
     inline void process(soxr_in_t in, size_t ilen, size_t* idone, soxr_out_t out, size_t olen, size_t* odone) {
-        throw_if_soxr_error(soxr_process(m_soxr, in, ilen, idone, out, olen, odone));
+        soxr_error_t err = soxr_process(m_soxr, in, ilen, idone, out, olen, odone);
+        if (err != 0) {
+            throw soxrpp::SoxrError(err);
+        }
     }
 
-    inline void set_input_fn(soxr_input_fn_t, void* input_fn_state, size_t max_ilen) {
-        throw_if_soxr_error(soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen));
+    inline void set_input_fn(soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
+        soxr_error_t err = soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen);
+        if (err != 0) {
+            throw soxrpp::SoxrError(err);
+        }
     }
 
     inline size_t output(soxr_out_t data, size_t olen) {
@@ -224,7 +232,10 @@ class SoxResampler {
     }
 
     inline void clear() {
-        throw_if_soxr_error(soxr_clear(m_soxr));
+        soxr_error_t err = soxr_clear(m_soxr);
+        if (err != 0) {
+            throw soxrpp::SoxrError(err);
+        }
     }
 };
 
@@ -235,8 +246,8 @@ inline void oneshot(double input_rate, double output_rate, unsigned num_channels
                     const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0),
                     const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
     soxr_io_spec_t io_spec_raw = (soxr_io_spec_t){
-        .itype = static_cast<int>(itype),
-        .otype = static_cast<int>(otype),
+        .itype = static_cast<soxr_datatype_t>(itype),
+        .otype = static_cast<soxr_datatype_t>(otype),
         .scale = io_spec.scale,
         .flags = io_spec.flags,
     };
@@ -254,8 +265,11 @@ inline void oneshot(double input_rate, double output_rate, unsigned num_channels
         .num_threads = runtime_spec.num_threads,
         .flags = runtime_spec.flags,
     };
-    throw_if_soxr_error(soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
-                                     &quality_spec_raw, &runtime_spec_raw));
+    soxr_error_t err = soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
+                                    &quality_spec_raw, &runtime_spec_raw);
+    if (err != 0) {
+        throw soxrpp::SoxrError(err);
+    }
 }
 
 } // namespace soxrpp

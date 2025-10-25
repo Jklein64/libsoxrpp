@@ -21,15 +21,19 @@ target_include_directories(soxrpp
     INTERFACE
         # The soxr headers aren't correctly forwarded for some reason...
         $<BUILD_INTERFACE:${${PROJECT_NAME}_SOURCE_DIR}/include>
-        # "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include ${soxr_SOURCE_DIR}/src>"
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
+if (${PROJECT_IS_TOP_LEVEL})
+    add_executable(soxrpp_test src/soxrpp_test.cpp)
+    target_link_libraries(soxrpp_test PUBLIC soxrpp)
+endif ()
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # See https://softwarecraft.ch/cmake-interface-lib/
 install(
-    TARGETS ${PROJECT_NAME}
+    TARGETS ${PROJECT_NAME} soxr
     EXPORT ${PROJECT_NAME}-targets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
