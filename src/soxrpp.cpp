@@ -64,13 +64,18 @@ void SoxResampler::set_input_fn(soxr_input_fn_t input_fn, void* input_fn_state, 
     throw_if_soxr_error(soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen));
 }
 
-size_t SoxResampler::output(soxr_out_t data, size_t olen) noexcept {
-    return soxr_output(m_soxr, data, olen);
+size_t SoxResampler::output(soxr_out_t data, size_t olen) {
+    size_t odone = soxr_output(m_soxr, data, olen);
+    soxr_error_t err = soxr_error(m_soxr);
+    if (err != 0) {
+        throw SoxrError(err);
+    }
+    return odone;
 }
 
-std::string SoxResampler::error() noexcept {
+std::optional<std::string> SoxResampler::error() noexcept {
     soxr_error_t err = soxr_error(m_soxr);
-    return err; // converts const char* -> std::string
+    return err == 0 ? std::nullopt : std::make_optional(err);
 }
 
 size_t* SoxResampler::num_clips() noexcept {
