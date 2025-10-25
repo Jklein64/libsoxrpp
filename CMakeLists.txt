@@ -23,11 +23,11 @@ FetchContent_MakeAvailable(soxr)
 target_link_libraries(soxrpp INTERFACE soxr)
 # Ugly hack because soxr CMake gets confused by modern CMake
 # TODO make this private once the wrapper is properly abstracted
-# target_include_directories(soxrpp INTERFACE
-#     # Can remove generators once PUBLIC becomes PRIVATE
-#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/soxrpp ${soxr_SOURCE_DIR}/src>  
-#     $<INSTALL_INTERFACE:include/soxrpp>  # TODO do I need find_package here for soxr?
-# )
+target_include_directories(soxrpp INTERFACE
+    # Can remove generators once PUBLIC becomes PRIVATE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include ${soxr_SOURCE_DIR}/src>  
+    $<INSTALL_INTERFACE:include>  # TODO do I need find_package here for soxr?
+)
 
 include(cmake/utils.cmake)
 include(GNUInstallDirs)
@@ -40,7 +40,8 @@ if(NOT CMAKE_SKIP_INSTALL_RULES)
         EXPORT ${PROJECT_NAME}-targets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
     write_basic_package_version_file(
         "${PROJECT_NAME}-config-version.cmake"
