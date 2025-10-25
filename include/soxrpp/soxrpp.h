@@ -71,7 +71,7 @@ class SOXRPP_EXPORT SoxResampler {
 
   public:
     SoxResampler(double input_rate, double output_rate, unsigned int num_channels,
-                 const std::optional<SoxrIoSpec>& io_spec = std::nullopt,
+                 const SoxrIoSpec& io_spec = SoxrIoSpec(SoxrDataType::Float32_I, SoxrDataType::Float32_I),
                  const std::optional<SoxrQualitySpec>& quality_spec = std::nullopt, const soxr_runtime_spec_t* runtime_spec = nullptr);
     ~SoxResampler();
 
@@ -87,7 +87,8 @@ class SOXRPP_EXPORT SoxResampler {
 };
 
 SOXRPP_EXPORT void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr_in_t in, size_t ilen, size_t* idone,
-                           soxr_out_t out, size_t olen, size_t* odone, const std::optional<SoxrIoSpec>& io_spec = std::nullopt,
+                           soxr_out_t out, size_t olen, size_t* odone,
+                           const SoxrIoSpec& io_spec = SoxrIoSpec(SoxrDataType::Float32_I, SoxrDataType::Float32_I),
                            const std::optional<SoxrQualitySpec>& quality_spec = std::nullopt,
                            const soxr_runtime_spec_t* runtime_spec = nullptr);
 
