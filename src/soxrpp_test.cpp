@@ -17,22 +17,17 @@ int main() {
     size_t olen = (size_t)((in.size() / 2) * orate / irate + .5); /* Assay output len. */
     // size_t olen = (size_t)((in.size()) * orate / irate + .5); /* Assay output len. */
 
-    // std::vector<std::vector<int32_t>> out(2);
-    // out[0].resize(olen);
-    // out[1].resize(olen);
-    std::vector<float> out(olen);
+    // std::vector<float> out(olen);
     std::vector<int32_t> outl(olen);
     std::vector<int32_t> outr(olen);
 
-    // auto obuf = std::array{outl.data(), outr.data()};
     auto obuf = std::array{std::span{outl}, std::span{outr}};
-    size_t odone;
 
     try {
         // soxrpp::SoxrIoSpec<soxrpp::SoxrDataType::Float32_I, soxrpp::SoxrDataType::Int32_S> io_spec;
         soxrpp::SoxrIoSpec<const float, soxrpp::SoxrDataShape::Interleaved, int32_t, soxrpp::SoxrDataShape::Split> io_spec;
         // soxrpp::SoxrIoSpec<soxrpp::SoxrDataType::Float32_I, soxrpp::SoxrDataType::Float32_I> io_spec;
-        soxrpp::oneshot(irate, orate, 2, std::span{in}, NULL, obuf, &odone, io_spec);
+        auto [_, odone] = soxrpp::oneshot(irate, orate, 2, std::span{in}, obuf, io_spec);
         // soxrpp::oneshot(irate, orate, 1, std::array{std::span{in}}, NULL, obuf, &odone, io_spec);
         // soxrpp::oneshot(irate, orate, 2,                /* Rates and # of chans. */
         //                 in.data(), in.size() / 2, NULL, /* Input. */

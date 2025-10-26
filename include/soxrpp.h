@@ -401,14 +401,12 @@ template <size_t InputChannels,
           size_t OutputExtent = std::dynamic_extent,
           SoxrDataShape InputShape = SoxrDataShape::Interleaved,
           SoxrDataShape OutputShape = SoxrDataShape::Interleaved>
-inline void oneshot(
+inline std::pair<size_t, size_t> oneshot(
     double input_rate,
     double output_rate,
     unsigned num_channels,
     const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf,
-    size_t* idone,
     std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf,
-    size_t* odone,
     const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec =
         SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(),
     const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0),
@@ -423,14 +421,17 @@ inline void oneshot(
         throw SoxrError("Output buffer shape does not match the shape from the provided io_spec");
     }
 
+    size_t idone, odone;
     soxr::soxr_io_spec_t io_spec_raw = io_spec.c_struct();
     soxr::soxr_quality_spec_t quality_spec_raw = quality_spec.c_struct();
     soxr::soxr_runtime_spec_t runtime_spec_raw = runtime_spec.c_struct();
     detail::ConvertArrayTypesResult res = detail::convert_array_types(num_channels, ibuf, obuf);
-    soxr::soxr_error_t err = soxr::soxr_oneshot(input_rate, output_rate, num_channels, res.in, res.ilen, idone, res.out, res.olen, odone, &io_spec_raw, &quality_spec_raw, &runtime_spec_raw);
+    soxr::soxr_error_t err = soxr::soxr_oneshot(input_rate, output_rate, num_channels, res.in, res.ilen, &idone, res.out, res.olen, &odone, &io_spec_raw, &quality_spec_raw, &runtime_spec_raw);
     if (err != 0) {
         throw soxrpp::SoxrError(err);
     }
+
+    return std::make_pair(idone, odone);
 }
 
 // Convenience signature (flat input buffer)
@@ -441,8 +442,8 @@ template <size_t OutputChannels,
           size_t OutputExtent = std::dynamic_extent,
           SoxrDataShape InputShape = SoxrDataShape::Interleaved,
           SoxrDataShape OutputShape = SoxrDataShape::Interleaved>
-inline void oneshot(double input_rate, double output_rate, unsigned num_channels, const std::span<InputType, InputExtent>& ibuf, size_t* idone, std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf, size_t* odone, const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec = SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(), const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0), const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
-    return oneshot<1, OutputChannels>(input_rate, output_rate, num_channels, std::array{ibuf}, idone, obuf, odone, io_spec, quality_spec, runtime_spec);
+inline std::pair<size_t, size_t> oneshot(double input_rate, double output_rate, unsigned num_channels, const std::span<InputType, InputExtent>& ibuf, std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf, const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec = SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(), const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0), const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
+    return oneshot<1, OutputChannels>(input_rate, output_rate, num_channels, std::array{ibuf}, obuf, io_spec, quality_spec, runtime_spec);
 }
 // Convenience signature (flat output buffer)
 template <size_t InputChannels,
@@ -452,8 +453,8 @@ template <size_t InputChannels,
           size_t OutputExtent = std::dynamic_extent,
           SoxrDataShape InputShape = SoxrDataShape::Interleaved,
           SoxrDataShape OutputShape = SoxrDataShape::Interleaved>
-inline void oneshot(double input_rate, double output_rate, unsigned num_channels, const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf, size_t* idone, std::span<OutputType, OutputExtent>& obuf, size_t* odone, const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec = SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(), const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0), const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
-    return oneshot<InputChannels, 1>(input_rate, output_rate, num_channels, ibuf, idone, std::array{obuf}, odone, io_spec, quality_spec, runtime_spec);
+inline std::pair<size_t, size_t> oneshot(double input_rate, double output_rate, unsigned num_channels, const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf, std::span<OutputType, OutputExtent>& obuf, const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec = SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(), const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0), const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
+    return oneshot<InputChannels, 1>(input_rate, output_rate, num_channels, ibuf, std::array{obuf}, io_spec, quality_spec, runtime_spec);
 }
 
 // Convenience signature (both flat buffers)
@@ -463,8 +464,8 @@ template <typename InputType = float,
           size_t OutputExtent = std::dynamic_extent,
           SoxrDataShape InputShape = SoxrDataShape::Interleaved,
           SoxrDataShape OutputShape = SoxrDataShape::Interleaved>
-inline void oneshot(double input_rate, double output_rate, unsigned num_channels, const std::span<InputType, InputExtent>& ibuf, size_t* idone, std::span<OutputType, OutputExtent>& obuf, size_t* odone, const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec = SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(), const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0), const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
-    return oneshot<1, 1>(input_rate, output_rate, num_channels, std::array{ibuf}, idone, std::array{obuf}, odone, io_spec, quality_spec, runtime_spec);
+inline std::pair<size_t, size_t> oneshot(double input_rate, double output_rate, unsigned num_channels, const std::span<InputType, InputExtent>& ibuf, std::span<OutputType, OutputExtent>& obuf, const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec = SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(), const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0), const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
+    return oneshot<1, 1>(input_rate, output_rate, num_channels, std::array{ibuf}, std::array{obuf}, io_spec, quality_spec, runtime_spec);
 }
 
 } // namespace soxrpp
