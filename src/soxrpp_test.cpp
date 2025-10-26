@@ -26,27 +26,13 @@ int main() {
 
     // auto obuf = std::array{outl.data(), outr.data()};
     auto obuf = std::array{std::span{outl}, std::span{outr}};
-    // auto obuf = std::array{std::span{out}};
-    // std::span in_span(in);
-    // const auto ibuf = std::vector{in_span};
-    // std::array<std::span<float>, 1> arr = {std::span{out}};
-    // std::span inn_span(in_span);
-    // std::span<std::span<float, 48>, 1>(std::span(in));
-    // auto ibuf = soxrpp::SoxrBuffer<const float, 48, std::allocator<std::span<const float, 48>>>(bb);
-    // auto obuf = soxrpp::SoxrBuffer(out);
-    // auto ibuf = soxrpp::SoxrBuffer(soxrpp::SoxrDataType::Float32_I, std::span{int});
-    // auto ibuf = soxrpp::SoxrBuffer<soxrpp::SoxrDataType::Float32_I, const float, 48>(std::span{in});
-    // auto obuf = soxrpp::SoxrBuffer<soxrpp::SoxrDataType::Float32_I, float,
-    // std::dynamic_extent>(std::span<float>(out));
-
-    // float* out = (float*)malloc(sizeof(*out) * olen); /* Allocate output buffer. */
     size_t odone;
 
     try {
         // soxrpp::SoxrIoSpec<soxrpp::SoxrDataType::Float32_I, soxrpp::SoxrDataType::Int32_S> io_spec;
         soxrpp::SoxrIoSpec<const float, soxrpp::SoxrDataShape::Interleaved, int32_t, soxrpp::SoxrDataShape::Split> io_spec;
         // soxrpp::SoxrIoSpec<soxrpp::SoxrDataType::Float32_I, soxrpp::SoxrDataType::Float32_I> io_spec;
-        soxrpp::oneshot(irate, orate, 2, std::array{std::span{in}}, NULL, obuf, &odone, io_spec);
+        soxrpp::oneshot(irate, orate, 2, std::span{in}, NULL, obuf, &odone, io_spec);
         // soxrpp::oneshot(irate, orate, 1, std::array{std::span{in}}, NULL, obuf, &odone, io_spec);
         // soxrpp::oneshot(irate, orate, 2,                /* Rates and # of chans. */
         //                 in.data(), in.size() / 2, NULL, /* Input. */
