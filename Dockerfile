@@ -18,6 +18,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     wget
 
+# Install g++-10 for C++20 support
+RUN apt-get update && apt-get install -y --no-install-recommends gcc-10 g++-10
+# See https://askubuntu.com/a/581497
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+
 # Install CMake. See https://askubuntu.com/a/865294
 RUN /bin/bash <<EOF
     set -euxo pipefail
