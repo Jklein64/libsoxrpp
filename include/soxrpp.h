@@ -321,10 +321,10 @@ class SoxResampler {
         size_t idone, odone;
         soxr::soxr_error_t err = soxr::soxr_process(m_soxr,
                                                     done ? nullptr : ibuf.data(input_interleaved),
-                                                    ibuf.size(input_interleaved),
+                                                    ibuf.size(input_interleaved, m_num_channels),
                                                     &idone,
                                                     obuf.data(output_interleaved),
-                                                    obuf.size(output_interleaved),
+                                                    obuf.size(output_interleaved, m_num_channels),
                                                     &odone);
         if (err != 0) {
             throw soxrpp::SoxrError(err);
