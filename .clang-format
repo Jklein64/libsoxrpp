@@ -3,7 +3,7 @@
 BasedOnStyle: LLVM
 Language: Cpp
 
-ColumnLimit: 0
+ColumnLimit: 135
 
 IndentWidth: 4
 UseTab: Never
@@ -15,7 +15,7 @@ AlwaysBreakTemplateDeclarations: true
 BreakConstructorInitializers: BeforeComma
 BreakBeforeTernaryOperators: true
 BinPackParameters: OnePerLine
-# BinPackArguments: false
+BinPackArguments: false
 BinPackLongBracedList: true
 IndentPPDirectives: AfterHash
 PointerAlignment: Left
