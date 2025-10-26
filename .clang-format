@@ -3,7 +3,7 @@
 BasedOnStyle: LLVM
 Language: Cpp
 
-ColumnLimit: 135
+ColumnLimit: 0
 
 IndentWidth: 4
 UseTab: Never
@@ -13,5 +13,9 @@ AllowShortFunctionsOnASingleLine: Empty
 AllowShortLambdasOnASingleLine: Empty
 AlwaysBreakTemplateDeclarations: true
 BreakConstructorInitializers: BeforeComma
+BreakBeforeTernaryOperators: true
+BinPackParameters: OnePerLine
+# BinPackArguments: false
+BinPackLongBracedList: true
 IndentPPDirectives: AfterHash
 PointerAlignment: Left
