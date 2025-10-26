@@ -21,13 +21,16 @@ int main() {
     std::vector<int32_t> outl(olen);
     std::vector<int32_t> outr(olen);
 
-    auto obuf = std::array{std::span{outl}, std::span{outr}};
+    auto ibuf = soxrpp::SoxrBuffer(std::span{in});
+    // auto ibuf = soxrpp::SoxrBuffer(std::array{std::span{in}});
+    auto obuf = soxrpp::SoxrBuffer(std::array{std::span{outl}, std::span{outr}});
+    // auto obuf = std::array{std::span{outl}, std::span{outr}};
 
     try {
         // soxrpp::SoxrIoSpec<soxrpp::SoxrDataType::Float32_I, soxrpp::SoxrDataType::Int32_S> io_spec;
         soxrpp::SoxrIoSpec<const float, soxrpp::SoxrDataShape::Interleaved, int32_t, soxrpp::SoxrDataShape::Split> io_spec;
         // soxrpp::SoxrIoSpec<soxrpp::SoxrDataType::Float32_I, soxrpp::SoxrDataType::Float32_I> io_spec;
-        auto [_, odone] = soxrpp::oneshot(irate, orate, 2, std::span{in}, obuf, io_spec);
+        auto [_, odone] = soxrpp::oneshot(irate, orate, 2, ibuf, obuf, io_spec);
         // soxrpp::oneshot(irate, orate, 1, std::array{std::span{in}}, NULL, obuf, &odone, io_spec);
         // soxrpp::oneshot(irate, orate, 2,                /* Rates and # of chans. */
         //                 in.data(), in.size() / 2, NULL, /* Input. */
