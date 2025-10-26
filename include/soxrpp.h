@@ -254,10 +254,23 @@ class SoxrBuffer {
         }
     }
 
+    SoxrBuffer(std::array<Type*, Channels> ptrs, size_t size)
+        : m_size(size) //
+    {
+        for (size_t i = 0; i < Channels; i++) {
+            m_data[i] = ptrs[i];
+        }
+    }
+
     SoxrBuffer(std::span<Type, Extent> buffer)
         : m_size(buffer.size()) //
     {
         m_data[0] = buffer.data();
+    }
+
+    SoxrBuffer(Type* ptr, size_t size)
+        : m_size(size) {
+        m_data[0] = ptr;
     }
 
     inline void* data(bool interleaved) const {
