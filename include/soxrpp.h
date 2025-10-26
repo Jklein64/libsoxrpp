@@ -309,8 +309,9 @@ class SoxResampler {
               size_t OutputChannels,
               size_t InputExtent = std::dynamic_extent,
               size_t OutputExtent = std::dynamic_extent>
-    inline std::pair<size_t, size_t> process(const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf,
-                                             std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf) {
+    inline std::pair<size_t, size_t> process(const SoxrBuffer<InputType, InputChannels, InputExtent>& ibuf,
+                                             SoxrBuffer<OutputType, OutputChannels, OutputExtent>& obuf,
+                                             bool done = false) {
         // Asserts "interleaved ==> single channel array"
         static_assert(InputShape != SoxrDataShape::Interleaved || InputChannels == 1, "Input buffer has invalid shape");
         static_assert(OutputShape != SoxrDataShape::Interleaved || OutputChannels == 1, "Output buffer has invalid shape");
@@ -319,7 +320,7 @@ class SoxResampler {
 
         size_t idone, odone;
         soxr::soxr_error_t err = soxr::soxr_process(m_soxr,
-                                                    ibuf.data(input_interleaved),
+                                                    done ? nullptr : ibuf.data(input_interleaved),
                                                     ibuf.size(input_interleaved),
                                                     &idone,
                                                     obuf.data(output_interleaved),
@@ -330,27 +331,6 @@ class SoxResampler {
         }
 
         return std::make_pair(idone, odone);
-    }
-
-    // Convenience signature (flat output buffer)
-    template <size_t InputChannels, size_t InputExtent = std::dynamic_extent, size_t OutputExtent = std::dynamic_extent>
-    inline std::pair<size_t, size_t> process(const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf,
-                                             std::span<OutputType, OutputExtent>& obuf) {
-        return process<InputChannels, 1>(ibuf, std::array{obuf});
-    }
-
-    // Convenience signature (flat input buffer)
-    template <size_t OutputChannels, size_t InputExtent = std::dynamic_extent, size_t OutputExtent = std::dynamic_extent>
-    inline std::pair<size_t, size_t> process(const std::span<InputType, InputExtent>& ibuf,
-                                             std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf) {
-        return process<1, OutputChannels>(std::array{ibuf}, obuf);
-    }
-
-    // Convenience signature (both flat buffers)
-    template <size_t InputExtent = std::dynamic_extent, size_t OutputExtent = std::dynamic_extent>
-    inline std::pair<size_t, size_t> process(const std::span<InputType, InputExtent>& ibuf,
-                                             std::span<OutputType, OutputExtent>& obuf) {
-        return process<1, 1>(std::array{ibuf}, std::array{obuf});
     }
 
     inline void set_input_fn(soxr::soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
