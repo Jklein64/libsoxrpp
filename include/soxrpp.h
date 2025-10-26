@@ -131,10 +131,9 @@ template <size_t InputChannels,
           typename OutputType,
           size_t InputExtent,
           size_t OutputExtent>
-ConvertArrayTypesResult<InputChannels, OutputChannels, InputType, OutputType>
-convert_array_types(unsigned num_channels,
-                    const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf,
-                    std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf) {
+auto convert_array_types(unsigned num_channels,
+                         const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf,
+                         std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf) {
     bool input_interleaved = InputChannels != num_channels || num_channels == 1;
     bool output_interleaved = OutputChannels != num_channels || num_channels == 1;
     if (!(InputChannels == 1 || InputChannels == num_channels) || !(OutputChannels == 1 || OutputChannels == num_channels)) {
@@ -308,6 +307,7 @@ template <typename InputType = float,
 class SoxResampler {
   private:
     soxr::soxr_t m_soxr{nullptr};
+    unsigned int m_num_channels;
 
   public:
     inline SoxResampler(double input_rate,
@@ -316,7 +316,9 @@ class SoxResampler {
                         const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec =
                             SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(),
                         const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::High, 0),
-                        const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
+                        const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1))
+        : m_num_channels(num_channels) //
+    {
         soxr::soxr_error_t err;
         soxr::soxr_io_spec_t io_spec_raw = io_spec.c_struct();
         soxr::soxr_quality_spec_t quality_spec_raw = quality_spec.c_struct();
@@ -331,11 +333,52 @@ class SoxResampler {
         soxr::soxr_delete(m_soxr);
     }
 
-    inline void process(soxr::soxr_in_t in, size_t ilen, size_t* idone, soxr::soxr_out_t out, size_t olen, size_t* odone) {
-        soxr::soxr_error_t err = soxr::soxr_process(m_soxr, in, ilen, idone, out, olen, odone);
+    template <size_t InputChannels,
+              size_t OutputChannels,
+              size_t InputExtent = std::dynamic_extent,
+              size_t OutputExtent = std::dynamic_extent>
+    inline std::pair<size_t, size_t> process(const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf,
+                                             std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf) {
+        bool input_interleaved = InputChannels != m_num_channels || m_num_channels == 1;
+        bool output_interleaved = OutputChannels != m_num_channels || m_num_channels == 1;
+        if ((input_interleaved && InputShape != SoxrDataShape::Interleaved) ||
+            (!input_interleaved && InputShape != SoxrDataShape::Split)) {
+            throw SoxrError("Input buffer shape does not match the shape from the provided io_spec");
+        }
+        if ((output_interleaved && OutputShape != SoxrDataShape::Interleaved) ||
+            (!output_interleaved && OutputShape != SoxrDataShape::Split)) {
+            throw SoxrError("Output buffer shape does not match the shape from the provided io_spec");
+        }
+
+        size_t idone, odone;
+        detail::ConvertArrayTypesResult res = detail::convert_array_types(num_channels, ibuf, obuf);
+        soxr::soxr_error_t err = soxr::soxr_process(m_soxr, res.in, res.ilen, &idone, res.out, res.olen, &odone);
         if (err != 0) {
             throw soxrpp::SoxrError(err);
         }
+
+        return std::make_pair(idone, odone);
+    }
+
+    // Convenience signature (flat output buffer)
+    template <size_t InputChannels, size_t InputExtent = std::dynamic_extent, size_t OutputExtent = std::dynamic_extent>
+    inline std::pair<size_t, size_t> process(const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf,
+                                             std::span<OutputType, OutputExtent>& obuf) {
+        return process<InputChannels, 1>(ibuf, std::array{obuf});
+    }
+
+    // Convenience signature (flat input buffer)
+    template <size_t OutputChannels, size_t InputExtent = std::dynamic_extent, size_t OutputExtent = std::dynamic_extent>
+    inline std::pair<size_t, size_t> process(const std::span<InputType, InputExtent>& ibuf,
+                                             std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf) {
+        return process<1, OutputChannels>(std::array{ibuf}, obuf);
+    }
+
+    // Convenience signature (both flat buffers)
+    template <size_t InputExtent = std::dynamic_extent, size_t OutputExtent = std::dynamic_extent>
+    inline std::pair<size_t, size_t> process(const std::span<InputType, InputExtent>& ibuf,
+                                             std::span<OutputType, OutputExtent>& obuf) {
+        return process<1, 1>(std::array{ibuf}, std::array{obuf});
     }
 
     inline void set_input_fn(soxr::soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
