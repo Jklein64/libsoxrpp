@@ -26,6 +26,8 @@ target_include_directories(soxrpp
 
 if (${PROJECT_IS_TOP_LEVEL})
     add_executable(soxrpp_test src/soxrpp_test.cpp)
+    target_compile_options(soxrpp_test PRIVATE -fsanitize=address)
+    target_link_options(soxrpp_test PRIVATE -fsanitize=address)
     target_link_libraries(soxrpp_test PUBLIC soxrpp)
 endif ()
 

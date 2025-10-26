@@ -1,7 +1,9 @@
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <optional>
+#include <span>
 #include <string>
 
 namespace soxrpp {
@@ -247,15 +249,38 @@ class SoxResampler {
     }
 };
 
-template <SoxrDataType itype = SoxrDataType::Float32_I, SoxrDataType otype = SoxrDataType::Float32_I>
-inline void oneshot(double input_rate, double output_rate, unsigned num_channels, soxr::soxr_in_t in, size_t ilen, size_t* idone,
-                    soxr::soxr_out_t out, size_t olen, size_t* odone,
+template <typename InputType, typename OutputType, size_t InputExtent, size_t OutputExtent, size_t InputChannels,
+          size_t OutputChannels, SoxrDataType itype = SoxrDataType::Float32_I, SoxrDataType otype = SoxrDataType::Float32_I>
+inline void oneshot(double input_rate, double output_rate, unsigned num_channels,
+                    const std::array<std::span<InputType, InputExtent>, InputChannels>& ibuf, size_t* idone,
+                    std::array<std::span<OutputType, OutputExtent>, OutputChannels>& obuf, size_t* odone,
                     const SoxrIoSpec<itype, otype>& io_spec = SoxrIoSpec<SoxrDataType::Float32_I, SoxrDataType::Float32_I>(),
                     const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::Low, 0),
                     const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1)) {
+    if (!(InputChannels == 1 || InputChannels == num_channels) || !(OutputChannels == 1 || OutputChannels == num_channels)) {
+        throw SoxrError("Invalid channel specification");
+    }
+
     soxr::soxr_io_spec_t io_spec_raw = io_spec.c_struct();
     soxr::soxr_quality_spec_t quality_spec_raw = quality_spec.c_struct();
     soxr::soxr_runtime_spec_t runtime_spec_raw = runtime_spec.c_struct();
+    bool input_interleaved = InputChannels != num_channels || num_channels == 1;
+    bool output_interleaved = OutputChannels != num_channels || num_channels == 1;
+    // Convert the wrapper structs into nested pointers
+    std::array<InputType*, InputChannels> ibuf_raw;
+    std::array<OutputType*, OutputChannels> obuf_raw;
+    for (size_t i = 0; i < InputChannels; i++) {
+        ibuf_raw[i] = ibuf[i].data();
+    }
+    for (size_t i = 0; i < OutputChannels; i++) {
+        obuf_raw[i] = obuf[i].data();
+    }
+    // Note: soxr represents interleaved and single-channel split differently!
+    soxr::soxr_in_t in = input_interleaved ? (void*)ibuf_raw[0] : (void*)ibuf_raw.data();
+    soxr::soxr_out_t out = output_interleaved ? (void*)obuf_raw[0] : (void*)obuf_raw.data();
+    // Length is the number of samples, where one "sample" counts across channels
+    size_t ilen = ibuf[0].size() / (input_interleaved ? num_channels : 1);
+    size_t olen = obuf[0].size() / (output_interleaved ? num_channels : 1);
     soxr::soxr_error_t err = soxr::soxr_oneshot(input_rate, output_rate, num_channels, in, ilen, idone, out, olen, odone, &io_spec_raw,
                                                 &quality_spec_raw, &runtime_spec_raw);
     if (err != 0) {
