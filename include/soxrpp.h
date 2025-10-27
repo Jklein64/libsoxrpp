@@ -19,7 +19,7 @@ class SoxrError : std::exception {
     SoxrError(const std::string& message)
         : message(message) {}
 
-    inline const char* what() const noexcept override {
+    const char* what() const noexcept override {
         return message.c_str();
     }
 };
@@ -107,7 +107,7 @@ struct SoxrIoSpec {
     double scale;
     unsigned long flags;
 
-    inline SoxrIoSpec() {
+    SoxrIoSpec() {
         auto itype = detail::DataTypeConverter<InputType, InputShape>::value;
         auto otype = detail::DataTypeConverter<OutputType, OutputShape>::value;
         // Use soxr's error checking
@@ -119,7 +119,7 @@ struct SoxrIoSpec {
         this->flags = 0;
     }
 
-    inline soxr::soxr_io_spec_t c_struct() const noexcept {
+    soxr::soxr_io_spec_t c_struct() const noexcept {
         auto itype = detail::DataTypeConverter<InputType, InputShape>::value;
         auto otype = detail::DataTypeConverter<OutputType, OutputShape>::value;
         return (soxr::soxr_io_spec_t){
@@ -168,7 +168,7 @@ struct SoxrQualitySpec {
     double stopband_begin;
     unsigned long flags;
 
-    inline SoxrQualitySpec() noexcept {
+    SoxrQualitySpec() noexcept {
         this->precision = 20;
         this->phase_response = 50;
         this->passband_end = 0.913;
@@ -176,7 +176,7 @@ struct SoxrQualitySpec {
         this->flags = 0;
     }
 
-    inline SoxrQualitySpec(SoxrQualityRecipe recipe, unsigned long flags) {
+    SoxrQualitySpec(SoxrQualityRecipe recipe, unsigned long flags) {
         soxr::soxr_quality_spec_t quality_spec = soxr::soxr_quality_spec(static_cast<unsigned long>(recipe), flags);
         if (quality_spec.e) {
             throw SoxrError(static_cast<const char*>(quality_spec.e));
@@ -188,7 +188,7 @@ struct SoxrQualitySpec {
         this->flags = quality_spec.flags;
     }
 
-    inline soxr::soxr_quality_spec_t c_struct() const noexcept {
+    soxr::soxr_quality_spec_t c_struct() const noexcept {
         return (soxr::soxr_quality_spec_t){
             .precision = this->precision,
             .phase_response = this->phase_response,
@@ -211,7 +211,7 @@ struct SoxrRuntimeSpec {
     unsigned int num_threads;
     unsigned long flags;
 
-    inline SoxrRuntimeSpec() noexcept {
+    SoxrRuntimeSpec() noexcept {
         this->log2_min_dft_size = 10;
         this->log2_large_dft_size = 17;
         this->coef_size_kbytes = 400;
@@ -219,7 +219,7 @@ struct SoxrRuntimeSpec {
         this->flags = 0;
     }
 
-    inline SoxrRuntimeSpec(unsigned int num_threads) noexcept {
+    SoxrRuntimeSpec(unsigned int num_threads) noexcept {
         soxr::soxr_runtime_spec_t runtime_spec = soxr::soxr_runtime_spec(num_threads);
         this->log2_min_dft_size = runtime_spec.log2_min_dft_size;
         this->log2_large_dft_size = runtime_spec.log2_large_dft_size;
@@ -228,7 +228,7 @@ struct SoxrRuntimeSpec {
         this->flags = runtime_spec.flags;
     }
 
-    inline soxr::soxr_runtime_spec_t c_struct() const noexcept {
+    soxr::soxr_runtime_spec_t c_struct() const noexcept {
         return (soxr::soxr_runtime_spec_t){
             .log2_min_dft_size = this->log2_min_dft_size,
             .log2_large_dft_size = this->log2_large_dft_size,
@@ -273,14 +273,14 @@ class SoxrBuffer {
         m_data[0] = ptr;
     }
 
-    inline void* data(bool interleaved) const {
+    void* data(bool interleaved) const {
         // Yes, this casts away const-ness. Soxr will re-apply it where appropriate. C++-style casts fail
         // to remove the const-ness because the compiler gives m_data the type "Type* const*" due to the
         // compile-time constant Channels used in the array declaration, so the underlying type is const.
         return interleaved ? (void*)(m_data[0]) : (void*)(m_data);
     }
 
-    inline size_t size(bool interleaved, unsigned int num_channels) const {
+    size_t size(bool interleaved, unsigned int num_channels) const {
         return interleaved ? m_size / num_channels : m_size;
     }
 };
@@ -295,13 +295,13 @@ class SoxResampler {
     unsigned int m_num_channels;
 
   public:
-    inline SoxResampler(double input_rate,
-                        double output_rate,
-                        unsigned int num_channels,
-                        const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec =
-                            SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(),
-                        const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::High, 0),
-                        const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1))
+    SoxResampler(double input_rate,
+                 double output_rate,
+                 unsigned int num_channels,
+                 const SoxrIoSpec<InputType, InputShape, OutputType, OutputShape>& io_spec =
+                     SoxrIoSpec<float, SoxrDataShape::Interleaved, float, SoxrDataShape::Interleaved>(),
+                 const SoxrQualitySpec& quality_spec = SoxrQualitySpec(SoxrQualityRecipe::High, 0),
+                 const SoxrRuntimeSpec& runtime_spec = SoxrRuntimeSpec(1))
         : m_num_channels(num_channels) //
     {
         soxr::soxr_error_t err;
@@ -314,7 +314,7 @@ class SoxResampler {
         }
     }
 
-    inline ~SoxResampler() {
+    ~SoxResampler() {
         soxr::soxr_delete(m_soxr);
     }
 
@@ -322,9 +322,9 @@ class SoxResampler {
               size_t OutputChannels,
               size_t InputExtent = std::dynamic_extent,
               size_t OutputExtent = std::dynamic_extent>
-    inline std::pair<size_t, size_t> process(const SoxrBuffer<InputType, InputChannels, InputExtent>& ibuf,
-                                             SoxrBuffer<OutputType, OutputChannels, OutputExtent>& obuf,
-                                             bool done = false) {
+    std::pair<size_t, size_t> process(const SoxrBuffer<InputType, InputChannels, InputExtent>& ibuf,
+                                      SoxrBuffer<OutputType, OutputChannels, OutputExtent>& obuf,
+                                      bool done = false) {
         // Asserts "interleaved ==> single channel array"
         static_assert(InputShape != SoxrDataShape::Interleaved || InputChannels == 1, "Input buffer has invalid shape");
         static_assert(OutputShape != SoxrDataShape::Interleaved || OutputChannels == 1, "Output buffer has invalid shape");
@@ -346,14 +346,14 @@ class SoxResampler {
         return std::make_pair(idone, odone);
     }
 
-    inline void set_input_fn(soxr::soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
+    void set_input_fn(soxr::soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
         soxr::soxr_error_t err = soxr::soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen);
         if (err != 0) {
             throw soxrpp::SoxrError(err);
         }
     }
 
-    inline size_t output(soxr::soxr_out_t data, size_t olen) {
+    size_t output(soxr::soxr_out_t data, size_t olen) {
         size_t odone = soxr::soxr_output(m_soxr, data, olen);
         soxr::soxr_error_t err = soxr::soxr_error(m_soxr);
         if (err != 0) {
@@ -362,24 +362,24 @@ class SoxResampler {
         return odone;
     }
 
-    inline std::optional<std::string> error() noexcept {
+    std::optional<std::string> error() noexcept {
         soxr::soxr_error_t err = soxr_error(m_soxr);
         return err == 0 ? std::nullopt : std::make_optional(err);
     }
 
-    inline size_t* num_clips() noexcept {
+    size_t* num_clips() noexcept {
         return soxr::soxr_num_clips(m_soxr);
     }
 
-    inline double delay() noexcept {
+    double delay() noexcept {
         return soxr::soxr_delay(m_soxr);
     }
 
-    inline char const* engine() noexcept {
+    char const* engine() noexcept {
         return soxr::soxr_engine(m_soxr);
     }
 
-    inline void clear() {
+    void clear() {
         soxr::soxr_error_t err = soxr::soxr_clear(m_soxr);
         if (err != 0) {
             throw soxrpp::SoxrError(err);
