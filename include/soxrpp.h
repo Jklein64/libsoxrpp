@@ -310,7 +310,7 @@ class SoxResampler {
         soxr::soxr_runtime_spec_t runtime_spec_raw = runtime_spec.c_struct();
         m_soxr = soxr::soxr_create(input_rate, output_rate, num_channels, &err, &io_spec_raw, &quality_spec_raw, &runtime_spec_raw);
         if (err != 0) {
-            throw soxrpp::SoxrError(err);
+            throw SoxrError(err);
         }
     }
 
@@ -340,7 +340,7 @@ class SoxResampler {
                                                     obuf.size(output_interleaved, m_num_channels),
                                                     &odone);
         if (err != 0) {
-            throw soxrpp::SoxrError(err);
+            throw SoxrError(err);
         }
 
         return std::make_pair(idone, odone);
@@ -349,7 +349,7 @@ class SoxResampler {
     void set_input_fn(soxr::soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
         soxr::soxr_error_t err = soxr::soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen);
         if (err != 0) {
-            throw soxrpp::SoxrError(err);
+            throw SoxrError(err);
         }
     }
 
@@ -382,8 +382,24 @@ class SoxResampler {
     void clear() {
         soxr::soxr_error_t err = soxr::soxr_clear(m_soxr);
         if (err != 0) {
-            throw soxrpp::SoxrError(err);
+            throw SoxrError(err);
         }
+    }
+
+    void set_io_ratio(double io_ratio, size_t slew_len) {
+        soxr::soxr_error_t err = soxr::soxr_set_io_ratio(m_soxr, io_ratio, slew_len);
+        if (err != 0) {
+            throw SoxrError(err);
+        }
+    }
+
+    void set_num_channels(unsigned int num_channels) {
+        soxr::soxr_error_t err = soxr::soxr_set_num_channels(m_soxr, num_channels);
+        if (err != 0) {
+            throw SoxrError(err);
+        }
+
+        m_num_channels = num_channels;
     }
 };
 
