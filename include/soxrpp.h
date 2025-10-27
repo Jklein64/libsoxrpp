@@ -1,9 +1,12 @@
 #pragma once
 
+#include <any>
 #include <array>
+#include <concepts>
 #include <optional>
 #include <span>
 #include <string>
+#include <type_traits>
 
 namespace soxrpp {
 
@@ -262,6 +265,15 @@ class SoxrBuffer {
         }
     }
 
+    // NB: don't forget to set the Channels template parameter!
+    SoxrBuffer(Type** ptrs, size_t size)
+        : m_size(size) //
+    {
+        for (size_t i = 0; i < Channels; i++) {
+            m_data[i] = ptrs[i];
+        }
+    }
+
     SoxrBuffer(std::span<Type, Extent> buffer)
         : m_size(buffer.size()) //
     {
@@ -269,7 +281,8 @@ class SoxrBuffer {
     }
 
     SoxrBuffer(Type* ptr, size_t size)
-        : m_size(size) {
+        : m_size(size) //
+    {
         m_data[0] = ptr;
     }
 
@@ -290,9 +303,14 @@ template <typename InputType = float,
           SoxrDataShape InputShape = SoxrDataShape::Interleaved,
           SoxrDataShape OutputShape = SoxrDataShape::Interleaved>
 class SoxResampler {
+    // If OutputType is const, then process() will segfault when it tries to write
+    static_assert(!std::is_const<OutputType>::value, "OutputType cannot be const");
+
   private:
     soxr::soxr_t m_soxr{nullptr};
     unsigned int m_num_channels;
+    // Type-erased lambda
+    std::any m_input_fn;
 
   public:
     SoxResampler(double input_rate,
@@ -346,11 +364,26 @@ class SoxResampler {
         return std::make_pair(idone, odone);
     }
 
-    void set_input_fn(soxr::soxr_input_fn_t input_fn, void* input_fn_state, size_t max_ilen) {
-        soxr::soxr_error_t err = soxr::soxr_set_input_fn(m_soxr, input_fn, input_fn_state, max_ilen);
-        if (err != 0) {
-            throw SoxrError(err);
+    template <size_t Channels, size_t Extent, typename F>
+        requires requires(F&& input_fn, SoxrBuffer<InputType, Channels, Extent> buf) {
+            std::invocable<F, SoxrBuffer<InputType, Channels, Extent>&>;
+            { input_fn(buf) } -> std::convertible_to<size_t>;
         }
+    void set_input_fn(F& input_fn, size_t max_ilen) noexcept {
+        m_input_fn = input_fn;
+        soxr::soxr_set_input_fn(
+            m_soxr,
+            [](void* context, soxr::soxr_in_t* data, size_t len) {
+                // Context is a pointer to the C++ lambda object. Re-cast and call it.
+                // Note: this is not threadsafe, but neither was the original soxr API
+                auto& lambda = *std::any_cast<F>(static_cast<std::any*>(context));
+                // If interleaved, *data has type "InputType*", otherwise "InputType**" (before erasure)
+                constexpr bool interleaved = InputShape == SoxrDataShape::Interleaved;
+                auto buf = SoxrBuffer<InputType, Channels, Extent>(interleaved ? data : *data, len);
+                return lambda(buf);
+            },
+            &m_input_fn,
+            max_ilen);
     }
 
     size_t output(soxr::soxr_out_t data, size_t olen) {
@@ -423,6 +456,7 @@ inline std::pair<size_t, size_t> oneshot(double input_rate,
     // Asserts "interleaved ==> single channel array"
     static_assert(InputShape != SoxrDataShape::Interleaved || InputChannels == 1, "Input buffer has invalid shape");
     static_assert(OutputShape != SoxrDataShape::Interleaved || OutputChannels == 1, "Output buffer has invalid shape");
+    static_assert(!std::is_const<OutputType>::value, "OutputType cannot be const");
     bool input_interleaved = InputShape == SoxrDataShape::Interleaved;
     bool output_interleaved = OutputShape == SoxrDataShape::Interleaved;
 
