@@ -408,8 +408,10 @@ class SoxResampler {
             max_ilen);
     }
 
-    size_t output(soxr::soxr_out_t data, size_t olen) {
-        size_t odone = soxr::soxr_output(m_soxr, data, olen);
+    template <size_t Channels = 1, size_t Extent = std::dynamic_extent>
+    size_t output(SoxrBuffer<OutputType, Channels, Extent> obuf) {
+        constexpr bool interleaved = OutputShape == SoxrDataShape::Interleaved;
+        size_t odone = soxr::soxr_output(m_soxr, obuf.data(interleaved), obuf.size(interleaved, m_num_channels));
         soxr::soxr_error_t err = soxr::soxr_error(m_soxr);
         if (err != 0) {
             throw SoxrError(err);

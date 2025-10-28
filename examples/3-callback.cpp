@@ -1,6 +1,7 @@
 #include "soxrpp.h"
 
 #include <cstring>
+#include <span>
 #include <vector>
 
 int main(int n, char const* arg[]) {
@@ -33,7 +34,7 @@ int main(int n, char const* arg[]) {
 
     try {
         do {
-            odone = soxr.output(obuf.data(), olen);
+            odone = soxr.output(soxrpp::SoxrBuffer(std::span{obuf}));
         } while (fwrite(obuf.data(), sizeof(float), odone, stdout));
     } catch (soxrpp::SoxrError& err) {
         fprintf(stderr, "Error! %s\n", err.what());
