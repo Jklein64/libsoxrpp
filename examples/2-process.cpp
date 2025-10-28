@@ -34,8 +34,8 @@ int main(int argc, char const* arg[]) {
 
             /* Copy data from the input buffer into the resampler, and resample
              * to produce as much output as is possible to the given output buffer: */
-            auto ibuf_soxr = soxrpp::SoxrBuffer((float*)ibuf.data(), ilen1);
-            auto obuf_soxr = soxrpp::SoxrBuffer((float*)obuf.data(), olen);
+            auto ibuf_soxr = soxrpp::SoxrBuffer(ibuf.data(), ilen1);
+            auto obuf_soxr = soxrpp::SoxrBuffer(obuf.data(), olen);
             auto [idone, odone] = soxr.process(ibuf_soxr, obuf_soxr, done);
             written = fwrite((void*)obuf.data(), osize, odone, stdout); /* Consume output.*/
             /* If the actual amount of data output is less than that requested, and
