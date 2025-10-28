@@ -103,12 +103,16 @@ struct DataTypeConverter<const int16_t, SoxrDataShape::Split> {
 } // namespace detail
 
 namespace SoxrIoFlags {
+// Applicable only if `OutputType` is `int16_t`
 constexpr unsigned long TPDF = soxr::SOXR_TPDF;
+// Disables TPDF
 constexpr unsigned long NoDither = soxr::SOXR_NO_DITHER;
 } // namespace SoxrIoFlags
 template <typename InputType, SoxrDataShape InputShape, typename OutputType, SoxrDataShape OutputShape>
 struct SoxrIoSpec {
+    // Linear gain to apply during resampling
     double scale;
+    // See `SoxrIoFlags` for options
     unsigned long flags;
 
     SoxrIoSpec() {
@@ -123,6 +127,7 @@ struct SoxrIoSpec {
         this->flags = 0;
     }
 
+    // Converts this struct to its C-equivalent in soxr
     soxr::soxr_io_spec_t c_struct() const noexcept {
         auto itype = detail::DataTypeConverter<InputType, InputShape>::value;
         auto otype = detail::DataTypeConverter<OutputType, OutputShape>::value;
@@ -136,21 +141,22 @@ struct SoxrIoSpec {
 };
 
 enum class SoxrQualityRecipe {
-    Quick = soxr::SOXR_QQ,     /* 'Quick' cubic interpolation. */
-    Low = soxr::SOXR_LQ,       /* 'Low' 16-bit with larger rolloff. */
-    Medium = soxr::SOXR_MQ,    /* 'Medium' 16-bit with medium rolloff. */
-    High = soxr::SOXR_HQ,      /* 'High quality' 20-bit. */
-    VeryHigh = soxr::SOXR_VHQ, /* 'Very high quality' 28-bit. */
+    Quick = soxr::SOXR_QQ,     // 'Quick' cubic interpolation
+    Low = soxr::SOXR_LQ,       // 'Low' 16-bit with larger rolloff
+    Medium = soxr::SOXR_MQ,    // 'Medium' 16-bit with medium rolloff
+    High = soxr::SOXR_HQ,      // 'High quality' 20-bit
+    VeryHigh = soxr::SOXR_VHQ, // 'Very high quality' 28-bit
 
     B16 = soxr::SOXR_16_BITQ,
     B20 = soxr::SOXR_20_BITQ,
     B24 = soxr::SOXR_24_BITQ,
     B28 = soxr::SOXR_28_BITQ,
     B32 = soxr::SOXR_32_BITQ,
-    /* Reserved for internal use (to be removed): */
-    LSR0 = soxr::SOXR_LSR0Q, /* 'Best sinc'. */
-    LSR1 = soxr::SOXR_LSR1Q, /* 'Medium sinc'. */
-    LSR2 = soxr::SOXR_LSR2Q, /* 'Fast sinc'. */
+
+    LSR0 = soxr::SOXR_LSR0Q, // 'Best sinc'
+    LSR1 = soxr::SOXR_LSR1Q, // 'Medium sinc'
+    LSR2 = soxr::SOXR_LSR2Q, // 'Fast sinc'
+
     LinearPhase = soxr::SOXR_LINEAR_PHASE,
     IntermediatePhase = soxr::SOXR_INTERMEDIATE_PHASE,
     MinimumPhase = soxr::SOXR_MINIMUM_PHASE,
@@ -158,19 +164,19 @@ enum class SoxrQualityRecipe {
 };
 
 namespace SoxrQualityFlags {
-constexpr unsigned long RolloffSmall = soxr::SOXR_ROLLOFF_SMALL;
-constexpr unsigned long RolloffMedium = soxr::SOXR_ROLLOFF_MEDIUM;
-constexpr unsigned long RolloffNone = soxr::SOXR_ROLLOFF_NONE;
-constexpr unsigned long HiPrecisionClock = soxr::SOXR_HI_PREC_CLOCK;
-constexpr unsigned long DoublePrecision = soxr::SOXR_DOUBLE_PRECISION;
-constexpr unsigned long VariableRate = soxr::SOXR_VR;
+constexpr unsigned long RolloffSmall = soxr::SOXR_ROLLOFF_SMALL;       // <= 0.01 dB
+constexpr unsigned long RolloffMedium = soxr::SOXR_ROLLOFF_MEDIUM;     // <= 0.35 dB
+constexpr unsigned long RolloffNone = soxr::SOXR_ROLLOFF_NONE;         // For Chebyshev bandwidth
+constexpr unsigned long HiPrecisionClock = soxr::SOXR_HI_PREC_CLOCK;   // Increase `irrational' ratio accuracy
+constexpr unsigned long DoublePrecision = soxr::SOXR_DOUBLE_PRECISION; // Use D.P. calcs even if precision <= 20
+constexpr unsigned long VariableRate = soxr::SOXR_VR;                  // Variable-rate resampling
 }; // namespace SoxrQualityFlags
 struct SoxrQualitySpec {
-    double precision;
-    double phase_response;
-    double passband_end;
-    double stopband_begin;
-    unsigned long flags;
+    double precision;      // Conversion precision (in bits)
+    double phase_response; // 0=minimum, ... 50=linear, ... 100=maximum
+    double passband_end;   // 0dB pt. bandwidth to preserve; nyquist=1
+    double stopband_begin; // Aliasing/imaging control; > passband_end
+    unsigned long flags;   // See `SoxrQualityFlags`
 
     SoxrQualitySpec() noexcept {
         this->precision = 20;
@@ -192,6 +198,7 @@ struct SoxrQualitySpec {
         this->flags = quality_spec.flags;
     }
 
+    // Converts this struct to its C-equivalent in soxr
     soxr::soxr_quality_spec_t c_struct() const noexcept {
         return (soxr::soxr_quality_spec_t){
             .precision = this->precision,
@@ -204,16 +211,16 @@ struct SoxrQualitySpec {
 };
 
 namespace SoxrRuntimeFlags {
-constexpr unsigned long CoeffInterpAuto = soxr::SOXR_COEF_INTERP_AUTO;
-constexpr unsigned long CoeffInterpLow = soxr::SOXR_COEF_INTERP_LOW;
-constexpr unsigned long CoeffInterpHigh = soxr::SOXR_COEF_INTERP_HIGH;
+constexpr unsigned long CoeffInterpAuto = soxr::SOXR_COEF_INTERP_AUTO; // Auto select coef. interpolation
+constexpr unsigned long CoeffInterpLow = soxr::SOXR_COEF_INTERP_LOW;   // Man. select: less CPU, more memory
+constexpr unsigned long CoeffInterpHigh = soxr::SOXR_COEF_INTERP_HIGH; // Man. select: more CPU, less memory
 } // namespace SoxrRuntimeFlags
 struct SoxrRuntimeSpec {
-    unsigned int log2_min_dft_size;
-    unsigned int log2_large_dft_size;
-    unsigned int coef_size_kbytes;
-    unsigned int num_threads;
-    unsigned long flags;
+    unsigned int log2_min_dft_size;   // For DFT efficiency. [8,15]
+    unsigned int log2_large_dft_size; // For DFT efficiency. [8,20]
+    unsigned int coef_size_kbytes;    // For SOXR_COEF_INTERP_AUTO (below)
+    unsigned int num_threads;         // 0: per OMP_NUM_THREADS; 1: 1 thread
+    unsigned long flags;              // Per the following #defines
 
     SoxrRuntimeSpec() noexcept {
         this->log2_min_dft_size = 10;
@@ -232,6 +239,7 @@ struct SoxrRuntimeSpec {
         this->flags = runtime_spec.flags;
     }
 
+    // Converts this struct to its C-equivalent in soxr
     soxr::soxr_runtime_spec_t c_struct() const noexcept {
         return (soxr::soxr_runtime_spec_t){
             .log2_min_dft_size = this->log2_min_dft_size,
@@ -321,6 +329,15 @@ class SoxResampler {
     } m_input_fn_context;
 
   public:
+    /**
+     * Creates a stream resampler.
+     * @param input_rate sample rate of the input
+     * @param output_rate target sample rate of the resampled output
+     * @param num_channels channel count
+     * @param io_spec input/output configuration
+     * @param quality_spec resampling quality configuration
+     * @param runtime_spec runtime configuration
+     */
     SoxResampler(double input_rate,
                  double output_rate,
                  unsigned int num_channels,
@@ -344,6 +361,14 @@ class SoxResampler {
         soxr::soxr_delete(m_soxr);
     }
 
+    /**
+     * Resamples data from the provided input buffer into the provided output buffer. There is no special meaning associated with a
+     * buffer (either input or output) that has length zero. Use either this API or the `set_input_fn` and `output` one, not both.
+     * @param ibuf readonly buffer to input samples
+     * @param obuf buffer to write output samples
+     * @param done true if there are no input samples and no more will be available
+     * @return The pair (`ilen`, `olen`) describing the number of samples read and written respectively.
+     */
     template <size_t InputChannels,
               size_t OutputChannels,
               size_t InputExtent = std::dynamic_extent,
@@ -372,6 +397,12 @@ class SoxResampler {
         return std::make_pair(idone, odone);
     }
 
+    /**
+     * Configure the input provider that supplies data to be resampled. The configured function function is called by `output` when it
+     * needs more input samples to continue processing. Use with the `output` API.
+     * @param input_fn a callable `SoxrBuffer(*)(size_t len)` that returns a buffer with the next `len` input samples
+     * @param max_ilen the maximum number of input samples that will be requested
+     */
     template <typename Lambda,
               typename Result = std::invoke_result_t<Lambda, size_t>,
               size_t Channels = Result::channels,
@@ -408,6 +439,11 @@ class SoxResampler {
             max_ilen);
     }
 
+    /**
+     * Resample and output a block of data, using input samples from the configured input provider. Use either this API or the
+     * `process` one, not both.
+     * @param obuf buffer to write output samples
+     */
     template <size_t Channels = 1, size_t Extent = std::dynamic_extent>
     size_t output(SoxrBuffer<OutputType, Channels, Extent> obuf) {
         constexpr bool interleaved = OutputShape == SoxrDataShape::Interleaved;
@@ -419,23 +455,39 @@ class SoxResampler {
         return odone;
     }
 
+    /**
+     * Query the he string form of the current internal processor error, if there is one. Note that calls that error will generally
+     * throw a `SoxrError` instead.
+     */
     std::optional<std::string> error() noexcept {
         soxr::soxr_error_t err = soxr_error(m_soxr);
         return err == 0 ? std::nullopt : std::make_optional(err);
     }
 
+    /**
+     * Query the number of samples that clipped when resampling. Only valid for integer data types.
+     */
     size_t* num_clips() noexcept {
         return soxr::soxr_num_clips(m_soxr);
     }
 
+    /**
+     * Query the current delay of the resampler, in output samples.
+     */
     double delay() noexcept {
         return soxr::soxr_delay(m_soxr);
     }
 
+    /**
+     * Query the name of the resampling engine.
+     */
     char const* engine() noexcept {
         return soxr::soxr_engine(m_soxr);
     }
 
+    /**
+     * Prepare to process a fresh signal with the same config.
+     */
     void clear() {
         soxr::soxr_error_t err = soxr::soxr_clear(m_soxr);
         if (err != 0) {
@@ -443,6 +495,11 @@ class SoxResampler {
         }
     }
 
+    /**
+     * Configure variable-rate resampling.
+     * @param io_ratio target resampling ratio
+     * @param slew_len transition smoothly from the current ratio to the target ratio over `slew_len` samples
+     */
     void set_io_ratio(double io_ratio, size_t slew_len) {
         soxr::soxr_error_t err = soxr::soxr_set_io_ratio(m_soxr, io_ratio, slew_len);
         if (err != 0) {
@@ -450,6 +507,10 @@ class SoxResampler {
         }
     }
 
+    /**
+     * Reconfigure the number of channels. Useful if it is not known when the `SoxrResampler` object is created.
+     * @param num_channels new channel count
+     */
     void set_num_channels(unsigned int num_channels) {
         soxr::soxr_error_t err = soxr::soxr_set_num_channels(m_soxr, num_channels);
         if (err != 0) {
@@ -460,6 +521,17 @@ class SoxResampler {
     }
 };
 
+/**
+ * Resample a (probably short) signal held entirely in memory. Note that the default quality is lower than for `process`.
+ * @param input_rate sample rate of the input
+ * @param output_rate target sample rate of the resampled output
+ * @param num_channels channel count
+ * @param ibuf buffer containing input samples
+ * @param obuf buffer to write output samples
+ * @param io_spec input/output configuration
+ * @param quality_spec resampling quality configuration
+ * @param runtime_spec runtime configuration
+ */
 template <size_t InputChannels,
           size_t OutputChannels,
           typename InputType = float,
