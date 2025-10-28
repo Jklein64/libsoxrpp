@@ -1,6 +1,6 @@
 # soxrpp
 
-RAII C++ wrapper for [libsoxr](https://github.com/chirlu/soxr?tab=readme-ov-file), a popular 1D signal resampling library written in C. This wrapper is also templated, which makes it easier to use in C++ codebases (for example, it suppors using lambda functions with captures instead of C-style function pointers for the `set_input_fn` API).
+RAII C++ wrapper for [libsoxr](https://github.com/chirlu/soxr?tab=readme-ov-file), a popular 1D signal resampling library written in C. This wrapper is also templated, which makes it easier to use in C++ codebases (for example, it supports using lambda functions with captures instead of C-style function pointers for the `set_input_fn` API).
 
 ## Getting Started
 
