@@ -1,10 +1,16 @@
 # soxrpp
 
-RAII C++ wrapper for [libsoxr](https://github.com/chirlu/soxr?tab=readme-ov-file), a popular 1D signal resampling library written in C. This wrapper is also templated, which makes it easier to use in C++ codebases (for example, it supports using lambda functions with captures instead of C-style function pointers for the `set_input_fn` API).
+RAII C++ wrapper for [libsoxr](https://sourceforge.net/projects/soxr/), a popular 1D signal resampling library written in C. This wrapper is also templated, which makes it easier to use in C++ codebases (for example, it supports using lambda functions with captures instead of C-style function pointers for the `set_input_fn` API).
+
+> [!TIP]
+> This wrapper library makes the input and output types of a resampler template parameters (as opposed to runtime enum values) to enable compile-time checking of buffer types. The underlying soxr library, however, uses an enum for types and switches on its value at runtime. This difference will generally not present issues, but it does make it more difficult to write code that supports dynamic input and output types, such as [soxr's example 3](https://sourceforge.net/p/soxr/code/ci/master/tree/examples/3-options-input-fn.c).
 
 ## Getting Started
 
 Installation for `soxrpp` uses CMake and is compatible with either `find_package` or `FetchContent`. See the [examples](./examples/) for usage. All API methods have documentation in [soxrpp.h](./include/soxrpp.h).
+
+> [!IMPORTANT]
+> Builds were only tested on the Docker image specified by the [Dockerfile](./Dockerfile). Builds on other systems, such as MacOS or Windows, might not work as expected.
 
 ### Installation for use with `find_package`
 
