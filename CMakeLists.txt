@@ -24,11 +24,10 @@ target_include_directories(soxrpp
         $<BUILD_INTERFACE:${soxr_SOURCE_DIR}/src>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
-if (${PROJECT_IS_TOP_LEVEL})
-    add_executable(soxrpp_test src/soxrpp_test.cpp)
-    target_compile_options(soxrpp_test PRIVATE -fsanitize=address)
-    target_link_options(soxrpp_test PRIVATE -fsanitize=address)
-    target_link_libraries(soxrpp_test PUBLIC soxrpp)
+option(BUILD_EXAMPLES "Whether to build executables in /examples" NO)
+if (${BUILD_EXAMPLES})
+    add_executable(1-oneshot-soxrpp examples/1-oneshot.cpp)
+    target_link_libraries(1-oneshot-soxrpp PUBLIC soxrpp::soxrpp)
 endif ()
 
 include(GNUInstallDirs)
