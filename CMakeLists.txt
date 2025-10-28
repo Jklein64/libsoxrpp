@@ -28,6 +28,8 @@ option(BUILD_EXAMPLES "Whether to build executables in /examples" NO)
 if (${BUILD_EXAMPLES})
     add_executable(1-oneshot-soxrpp examples/1-oneshot.cpp)
     target_link_libraries(1-oneshot-soxrpp PUBLIC soxrpp::soxrpp)
+    add_executable(2-process-soxrpp examples/2-process.cpp)
+    target_link_libraries(2-process-soxrpp PUBLIC soxrpp::soxrpp)
 endif ()
 
 include(GNUInstallDirs)
