@@ -30,6 +30,8 @@ if (${BUILD_EXAMPLES})
     target_link_libraries(1-oneshot-soxrpp PUBLIC soxrpp::soxrpp)
     add_executable(2-process-soxrpp examples/2-process.cpp)
     target_link_libraries(2-process-soxrpp PUBLIC soxrpp::soxrpp)
+    add_executable(3-callback-soxrpp examples/3-callback.cpp)
+    target_link_libraries(3-callback-soxrpp PUBLIC soxrpp::soxrpp)
 endif ()
 
 include(GNUInstallDirs)
